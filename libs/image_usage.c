@@ -1,0 +1,339 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
+
+
+#include "image.h"
+#include "image_usage.h"
+#include "queue.h"
+#include "priority_queue.h"
+
+
+// Créer un noyau gaussien de taille size et d'écart-type sigma
+kernel_t create_gaussian_kernel(int size, double sigma) {
+    kernel_t kernel = {
+        .size = size,
+        .data = (double*) malloc(sizeof(double) * size * size)
+    };
+    double mean = size / 2;
+    double sum = 0.0;
+    for (int x = 0; x < size; x++) {
+        for (int y = 0; y < size; y++) {
+            kernel.data[x * size + y] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
+            sum += kernel.data[x * size + y];
+        }
+    }
+    // Normalisation du noyau
+    for (int i = 0; i < size * size; i++) {
+        kernel.data[i] /= sum;
+    }
+    return kernel;
+}
+
+// Créer le noyau de Sobel selon l'axe des x
+kernel_t create_sobel_kernel_x() {
+    kernel_t kernel = {
+        .size = 3,
+        .data = (double*) malloc(sizeof(double) * 9)
+    };
+    kernel.data[0] = -1; kernel.data[1] = -2; kernel.data[2] = -1;
+    kernel.data[3] = 0; kernel.data[4] = 0; kernel.data[5] = 0;
+    kernel.data[6] = 1; kernel.data[7] = 2; kernel.data[8] = 1;
+    return kernel;
+}
+
+// Créer le noyau de Sobel selon l'axe des y
+kernel_t create_sobel_kernel_y() {
+    kernel_t kernel = {
+        .size = 3,
+        .data = (double*) malloc(sizeof(double) * 9)
+    };
+    kernel.data[0] = -1; kernel.data[1] = 0; kernel.data[2] = 1;
+    kernel.data[3] = -2; kernel.data[4] = 0; kernel.data[5] = 2;
+    kernel.data[6] = -1; kernel.data[7] = 0; kernel.data[8] = 1;
+    return kernel;
+}
+
+// Appliquer un filtre de Sobel à un image_t (avec extension de l'image) et calcule les gradients
+void image_apply_sobel(image_t image, image_t* gradient_x, image_t* gradient_y) {
+    kernel_t kernel_x = create_sobel_kernel_x();
+    kernel_t kernel_y = create_sobel_kernel_y();
+
+    image_t copy1 = image_copy(image);
+    image_t copy2 = image_copy(image);
+
+    *gradient_x = image_apply_filter(copy1, kernel_x);
+    *gradient_y = image_apply_filter(copy2, kernel_y);
+
+    image_free(copy1);
+    image_free(copy2);
+
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            image.pixels[i][j] = sqrt(pow(gradient_x->pixels[i][j], 2) + pow(gradient_y->pixels[i][j], 2));
+        }
+    }
+    kernel_free(kernel_x);
+    kernel_free(kernel_y);
+}
+
+
+// Calculer la direction des gradients
+image_t image_compute_gradient_direction(image_t gradient_x, image_t gradient_y) {
+    image_t direction = image_copy(gradient_x);
+
+    for (int i = 0; i < gradient_x.rows; i++) {
+        for (int j = 0; j < gradient_x.cols; j++) {
+            direction.pixels[i][j] = atan2(gradient_x.pixels[i][j], gradient_y.pixels[i][j]);
+        }
+    }
+    image_free(gradient_x);
+    image_free(gradient_y);
+
+    return direction;
+}
+
+
+// Suppression des non-maxima locaux
+image_t image_non_maxima_suppression(image_t image, image_t direction) {
+    image_t result = image_copy(image);
+
+    for (int i = 1; i < image.rows-1; i++) {
+        for (int j = 1; j < image.cols-1; j++) {
+            double angle = direction.pixels[i][j]; // angle en radians
+            angle = fmod(angle + M_PI, M_PI); // angle entre 0 et pi
+
+            double q = 0.0;
+            double r = 0.0;
+
+            if ((angle >= 0 && angle < M_PI/8) || (angle >= 7*M_PI/8 && angle < M_PI)) {
+                q = image.pixels[i][j+1];
+                r = image.pixels[i][j-1];
+            } else if (angle >= M_PI/8 && angle < 3*M_PI/8) {
+                q = image.pixels[i-1][j+1];
+                r = image.pixels[i+1][j-1];
+            } else if (angle >= 3*M_PI/8 && angle < 5*M_PI/8) {
+                q = image.pixels[i-1][j];
+                r = image.pixels[i+1][j];
+            } else if (angle >= 5*M_PI/8 && angle < 7*M_PI/8) {
+                q = image.pixels[i-1][j-1];
+                r = image.pixels[i+1][j+1];
+            }
+
+            if (image.pixels[i][j] >= q && image.pixels[i][j] >= r) {
+                result.pixels[i][j] = image.pixels[i][j];
+            } else {
+                result.pixels[i][j] = 0;
+            }
+        }
+    }
+    image_free(direction);
+    return result;
+}
+
+
+// Appliquer un double seuil
+void image_double_threshold(image_t image, double t_max, double t_min) {
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            // Si l'intensité est assez forte on garde le pixel
+            if (image.pixels[i][j] > t_max) {
+                image.pixels[i][j] = 1;
+            }
+            // Si elle est trop faible on le supprime
+            else if (image.pixels[i][j] < t_min) {
+                image.pixels[i][j] = 0;
+            }
+            // Si elle est entre les deux seuils on regardera si un voisin est assez fort
+            else {
+                image.pixels[i][j] = 1/2.;
+            }
+        }
+    }
+}
+
+
+void image_hysteresis_aux(image_t image, bool** visited, int i, int j, queue_t* queue) {
+    position_t* pos = (position_t*) malloc(sizeof(position_t));
+    pos->i = i;
+    pos->j = j;
+    queue_enqueue(queue, (void*) pos);
+    visited[i][j] = true;
+
+    while (!queue_is_empty(queue)) {
+        position_t* p = (position_t*) queue_dequeue(queue);
+
+        // Vérifier les voisins
+        for (int di = -1; di <= 1; di++) {
+            for (int dj = -1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) continue; // Ignorer le pixel central
+                int ni = p->i + di;
+                int nj = p->j + dj;
+
+                if (ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols &&
+                    !visited[ni][nj] && image.pixels[ni][nj] != 0) {
+                    visited[ni][nj] = true;
+
+                    position_t* new_pos = (position_t*) malloc(sizeof(position_t));
+                    new_pos->i = ni;
+                    new_pos->j = nj;
+
+                    queue_enqueue(queue, (void*) new_pos);
+                }
+            }
+        }
+        free(p);
+    }
+}
+
+// Tracer les contours d'une image avec une hystérésis
+void image_hysteresis(image_t image) {
+    // Initialiser la matrice des pixels visités
+    bool** visited = (bool**) malloc(sizeof(bool*) * image.rows);
+    for (int i = 0; i < image.rows; i++) {
+        visited[i] = (bool*) malloc(sizeof(bool) * image.cols);
+        for (int j = 0; j < image.cols; j++) {
+            visited[i][j] = false;
+        }
+    }
+
+    // Initialiser la queue
+    queue_t* queue = queue_create();
+
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            if (!visited[i][j] && image.pixels[i][j] == 1) {
+                image_hysteresis_aux(image, visited, i, j, queue);
+            }
+        }
+    }
+
+    // Libérer les ressources
+    for (int i = 0; i < image.rows; i++) {
+        free(visited[i]);
+    }
+    free(visited);
+    queue_free(queue);
+}
+
+
+
+/* PARCOURS DE L'IMAGE */
+queue_t* solve_dijkstra(image_t image, position_t s, position_t t) {
+    // Initialiser les tableaux
+    position_t** pred = (position_t**) malloc(sizeof(position_t*) * image.rows);
+    double** dis = (double**) malloc(sizeof(double*) * image.rows);
+    bool** visited = (bool**) malloc(sizeof(bool*) * image.rows);
+    for (int i = 0; i < image.rows; i++) {
+        pred[i] = (position_t*) malloc(sizeof(position_t) * image.cols);
+        dis[i] = (double*) malloc(sizeof(double) * image.cols);
+        visited[i] = (bool*) malloc(sizeof(bool*) * image.cols);
+        for (int j = 0; j < image.cols; j++) {
+            pred[i][j] = (position_t){.i = -1, .j = -1};
+            dis[i][j] = INFINITY;
+            visited[i][j] = false;
+        }
+    }
+    dis[s.i][s.j] = 0;
+
+    // Créer une file de priorité
+    priority_queue_t* pq = pq_create(image.rows * image.cols);
+    position_t* start = (position_t*) malloc(sizeof(position_t));
+    start->i = s.i;
+    start->j = s.j;
+    pq_push(pq, 0, (void*) start);
+
+    // Directions possibles
+    int directions[4][2] = {
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
+    };
+
+    // Algorithme principal
+    while (!pq_is_empty(pq)) {
+        position_t* p = (position_t*) pq_pop(pq);
+
+        if (visited[p->i][p->j]) continue;
+        visited[p->i][p->j] = true;
+
+        // Arrêter si on atteint la cible
+        if (p->i == t.i && p->j == t.j) break;
+
+        // Mettre à jour les voisins
+        for (int d = 0; d < 4; d++) {
+            int ni = p->i + directions[d][0];
+            int nj = p->j + directions[d][1];
+
+            if (ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols &&
+                image.pixels[ni][nj] == 0 && !visited[ni][nj]) {
+                double new_dist = dis[p->i][p->j] + 1;
+                if (new_dist < dis[ni][nj]) {
+                    dis[ni][nj] = new_dist;
+                    pred[ni][nj] = *p;
+
+                    position_t* pos = (position_t*) malloc(sizeof(position_t));
+                    pos->i = ni;
+                    pos->j = nj;
+
+                    pq_push(pq, new_dist, (void*) pos);
+                }
+            }
+        }
+        free(p);
+    }
+    pq_free(pq);
+    
+    // Reconstruire le chemin
+    queue_t* solution = queue_create();
+    
+    position_t* current = (position_t*) malloc(sizeof(position_t));
+    current->i = t.i;
+    current->j = t.j;
+    while (current->i != -1 && current->j != -1) {
+        queue_enqueue(solution, (void*) current);
+
+        position_t pr = pred[current->i][current->j];
+        current = (position_t*) malloc(sizeof(position_t));
+        current->i = pr.i;
+        current->j = pr.j;
+    }
+    free(current);
+
+    // Libérer les ressources
+    for (int i = 0; i < image.rows; i++) {
+        free(pred[i]);
+        free(dis[i]);
+        free(visited[i]);
+    }
+    free(pred);
+    free(dis);
+    free(visited);
+
+    return solution;
+}
+
+void draw_solution(image_t original_image, queue_t* solution, pixel_t pixel, int n) {
+    // On crée une image de la même taille que l'image d'origine
+    image_t copy = image_copy(original_image);
+    
+    // On parcourt la liste de maillons
+    while (!queue_is_empty(solution)) {
+        // On récupère le pixel courant
+        position_t* p = (position_t*) queue_dequeue(solution);
+        for (int i = p->i*n; i < (p->i+n)*n && i < copy.rows; i++) {
+            for (int j = p->j*n; j < (p->j+n)*n && j < copy.cols; j++) {
+                copy.pixels[i][j] = pixel;
+            }
+        }
+    }
+
+    // On affiche l'image
+    image_show(copy);
+    image_write(copy, "solution.png");
+
+    // On libère la liste de maillons
+    queue_free(solution);
+
+    // On libère l'image
+    image_free(copy);
+}
