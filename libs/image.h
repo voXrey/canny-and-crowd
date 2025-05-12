@@ -48,6 +48,11 @@ cv::Mat cvmat_from_colored_image(colored_image_t colored_image);
 cv::Mat cvmat_from_image(image_t image);
 image_t image_from_colored_image(colored_image_t colored_image);
 
+// Fonctions de lecture et d'écriture d'images
+colored_image_t image_read(const char* filename);
+void image_write(image_t image, const char* filename);
+void colored_image_write(colored_image_t image, const char* filename);
+
 // Fonctions d'affichage
 void colored_image_show(colored_image_t image);
 void image_show(image_t image);

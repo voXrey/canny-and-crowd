@@ -108,6 +108,28 @@ image_t image_from_colored_image(colored_image_t colored_image) {
     return image;
 }
 
+// Fonctions de lecture et d'écriture d'images
+
+colored_image_t image_read(const char* path) {
+    cv::Mat mat = cv::imread(path, cv::IMREAD_COLOR);
+    if (mat.empty()) {
+        fprintf(stderr, "Erreur lors de la lecture de l'image : %s\n", path);
+        exit(EXIT_FAILURE);
+    }
+    colored_image_t image = colored_image_from_mat(mat);
+    return image;
+}
+
+void image_write(image_t image, const char* path) {
+    cv::Mat img = image_to_cvmat(image);
+    cv::imwrite(path, img);
+}
+
+void colored_image_write(colored_image_t image, const char* path) {
+    cv::Mat img = cvmat_from_colored_image(image);
+    cv::imwrite(path, img);
+}
+
 // Fonctions d'affichage
 
 // Afficher une image colorée
