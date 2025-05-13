@@ -43,6 +43,6 @@ void image_hysteresis(image_t image);
 queue_t* solve_dijkstra(image_t image, position_t s, position_t t);
 
 // Dessine une solution (chemin) sur une image
-void draw_solution(image_t original_image, queue_t* solution, pixel_t pixel, int n);
+void draw_solution(colored_image_t original_image, queue_t* solution, colored_pixel_t pixel, int n);
 
 #endif // IMAGE_USAGE_H

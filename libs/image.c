@@ -7,6 +7,42 @@
 #include "image.h"
 
 
+// Fonctions pratiques
+
+// Copier une image en niveaux de gris
+image_t image_copy(image_t image) {
+    image_t copy = {
+        .name = image.name,
+        .rows = image.rows,
+        .cols = image.cols,
+        .pixels = (pixel_t**) malloc(sizeof(pixel_t*) * image.rows),
+    };
+    for (int i = 0; i < image.rows; i++) {
+        copy.pixels[i] = (pixel_t*) malloc(sizeof(pixel_t) * image.cols);
+        for (int j = 0; j < image.cols; j++) {
+            copy.pixels[i][j] = image.pixels[i][j];
+        }
+    }
+    return copy;
+}
+
+// Copier une image colorée
+colored_image_t colored_image_copy(colored_image_t image) {
+    colored_image_t copy = {
+        .name = image.name,
+        .rows = image.rows,
+        .cols = image.cols,
+        .pixels = (colored_pixel_t**) malloc(sizeof(colored_pixel_t*) * image.rows),
+    };
+    for (int i = 0; i < image.rows; i++) {
+        copy.pixels[i] = (colored_pixel_t*) malloc(sizeof(colored_pixel_t) * image.cols);
+        for (int j = 0; j < image.cols; j++) {
+            copy.pixels[i][j] = image.pixels[i][j];
+        }
+    }
+    return copy;
+}
+
 // Fonctions de gestion de la mémoire
 
 // Libérer la mémoire d'une image en niveaux de gris
@@ -101,8 +137,8 @@ image_t image_from_colored_image(colored_image_t colored_image) {
         image.pixels[i] = (pixel_t*) malloc(sizeof(pixel_t) * colored_image.cols);
         for (int j = 0; j < colored_image.cols; j++) {
             colored_pixel_t pixel = colored_image.pixels[i][j];
-            // Pondérations standard pour convertir en niveaux de gris
-            image.pixels[i][j] = 0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b;
+            // Pondérations standard pour convertir en niveaux de gris et normalisation
+            image.pixels[i][j] = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b) / 255.0;
         }
     }
     return image;
@@ -110,6 +146,7 @@ image_t image_from_colored_image(colored_image_t colored_image) {
 
 // Fonctions de lecture et d'écriture d'images
 
+// Lire une image en niveaux de gris
 colored_image_t image_read(const char* path) {
     cv::Mat mat = cv::imread(path, cv::IMREAD_COLOR);
     if (mat.empty()) {
@@ -117,14 +154,17 @@ colored_image_t image_read(const char* path) {
         exit(EXIT_FAILURE);
     }
     colored_image_t image = colored_image_from_mat(mat);
+    image.name = strdup(path); // Dupliquer le nom du fichier
     return image;
 }
 
+// Ecrire une image en niveaux de gris
 void image_write(image_t image, const char* path) {
-    cv::Mat img = image_to_cvmat(image);
+    cv::Mat img = cvmat_from_image(image);
     cv::imwrite(path, img);
 }
 
+// Ecrire une image colorée
 void colored_image_write(colored_image_t image, const char* path) {
     cv::Mat img = cvmat_from_colored_image(image);
     cv::imwrite(path, img);
@@ -135,6 +175,7 @@ void colored_image_write(colored_image_t image, const char* path) {
 // Afficher une image colorée
 void colored_image_show(colored_image_t image) {
     cv::Mat img = cvmat_from_colored_image(image);
+    fprintf(stderr, "Affichage de l'image : %s\n", image.name);
     cv::namedWindow(image.name, cv::WINDOW_NORMAL);
     cv::imshow(image.name, img);
     cv::waitKey(0); // se ferme après un appui sur une touche
@@ -200,7 +241,7 @@ image_t image_apply_filter(image_t image, kernel_t kernel) {
                     pixel_t pixel = (xi >= 0 && xi < image.rows && yj >= 0 && yj < image.cols)
                                     ? image.pixels[xi][yj]
                                     : 0; // Extension par zéro
-                    intensity += pixel * kernel.data[x * kernel.size + y];
+                    intensity += pixel * kernel.data[x][y];
                 }
             }
             result.pixels[i][j] = intensity;
@@ -215,7 +256,7 @@ image_t image_thicken(image_t image, int n, pixel_t intensity) {
 
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
-            if (copy.pixels[i][j] == intensity) {
+            if (image.pixels[i][j] == intensity) {
                 for (int x = -n; x <= n; x++) {
                     for (int y = -n; y <= n; y++) {
                         if (i + x >= 0 && i + x < image.rows && j + y >= 0 && j + y < image.cols) {

@@ -14,19 +14,22 @@
 kernel_t create_gaussian_kernel(int size, double sigma) {
     kernel_t kernel = {
         .size = size,
-        .data = (double*) malloc(sizeof(double) * size * size)
+        .data = (double**) malloc(sizeof(double*) * size)
     };
     double mean = size / 2;
     double sum = 0.0;
     for (int x = 0; x < size; x++) {
+        kernel.data[x] = (double*) malloc(sizeof(double) * size);
         for (int y = 0; y < size; y++) {
-            kernel.data[x * size + y] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
-            sum += kernel.data[x * size + y];
+            kernel.data[x][y] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
+            sum += kernel.data[x][y];
         }
     }
     // Normalisation du noyau
-    for (int i = 0; i < size * size; i++) {
-        kernel.data[i] /= sum;
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            kernel.data[i][j] /= sum;
+        }
     }
     return kernel;
 }
@@ -35,11 +38,15 @@ kernel_t create_gaussian_kernel(int size, double sigma) {
 kernel_t create_sobel_kernel_x() {
     kernel_t kernel = {
         .size = 3,
-        .data = (double*) malloc(sizeof(double) * 9)
+        .data = (double**) malloc(sizeof(double*) * 3)
     };
-    kernel.data[0] = -1; kernel.data[1] = -2; kernel.data[2] = -1;
-    kernel.data[3] = 0; kernel.data[4] = 0; kernel.data[5] = 0;
-    kernel.data[6] = 1; kernel.data[7] = 2; kernel.data[8] = 1;
+    for (int i = 0; i < 3; i++) {
+        kernel.data[i] = (double*) malloc(sizeof(double) * 3);
+    }
+
+    kernel.data[0][0] = -1; kernel.data[0][1] = -2; kernel.data[0][2] = -1;
+    kernel.data[1][0] = 0; kernel.data[1][1] = 0; kernel.data[1][2] = 0;
+    kernel.data[2][0] = 1; kernel.data[2][1] = 2; kernel.data[2][2] = 1;
     return kernel;
 }
 
@@ -47,11 +54,15 @@ kernel_t create_sobel_kernel_x() {
 kernel_t create_sobel_kernel_y() {
     kernel_t kernel = {
         .size = 3,
-        .data = (double*) malloc(sizeof(double) * 9)
+        .data = (double**) malloc(sizeof(double*) * 3)
     };
-    kernel.data[0] = -1; kernel.data[1] = 0; kernel.data[2] = 1;
-    kernel.data[3] = -2; kernel.data[4] = 0; kernel.data[5] = 2;
-    kernel.data[6] = -1; kernel.data[7] = 0; kernel.data[8] = 1;
+    for (int i = 0; i < 3; i++) {
+        kernel.data[i] = (double*) malloc(sizeof(double) * 3);
+    }
+
+    kernel.data[0][0] = -1; kernel.data[0][1] = 0; kernel.data[0][2] = 1;
+    kernel.data[1][0] = -2; kernel.data[1][1] = 0; kernel.data[1][2] = 2;
+    kernel.data[2][0] = -1; kernel.data[2][1] = 0; kernel.data[2][2] = 1;
     return kernel;
 }
 
@@ -139,11 +150,11 @@ void image_double_threshold(image_t image, double t_max, double t_min) {
         for (int j = 0; j < image.cols; j++) {
             // Si l'intensité est assez forte on garde le pixel
             if (image.pixels[i][j] > t_max) {
-                image.pixels[i][j] = 1;
+                image.pixels[i][j] = 1.;
             }
             // Si elle est trop faible on le supprime
             else if (image.pixels[i][j] < t_min) {
-                image.pixels[i][j] = 0;
+                image.pixels[i][j] = 0.;
             }
             // Si elle est entre les deux seuils on regardera si un voisin est assez fort
             else {
@@ -153,7 +164,7 @@ void image_double_threshold(image_t image, double t_max, double t_min) {
     }
 }
 
-
+// Tracer les contours en contact avec un pixel fort
 void image_hysteresis_aux(image_t image, bool** visited, int i, int j, queue_t* queue) {
     position_t* pos = (position_t*) malloc(sizeof(position_t));
     pos->i = i;
@@ -163,6 +174,7 @@ void image_hysteresis_aux(image_t image, bool** visited, int i, int j, queue_t* 
 
     while (!queue_is_empty(queue)) {
         position_t* p = (position_t*) queue_dequeue(queue);
+        image.pixels[p->i][p->j] = 1.; // Marquer le pixel comme fort
 
         // Vérifier les voisins
         for (int di = -1; di <= 1; di++) {
@@ -201,11 +213,19 @@ void image_hysteresis(image_t image) {
     // Initialiser la queue
     queue_t* queue = queue_create();
 
+    // Pour chaque pixel fort, rendre fort les pixels faibles connectés
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
-            if (!visited[i][j] && image.pixels[i][j] == 1) {
+            if (!visited[i][j] && image.pixels[i][j] == 1.) {
                 image_hysteresis_aux(image, visited, i, j, queue);
             }
+        }
+    }
+
+    // Supprimer les pixels faibles restant
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            if (image.pixels[i][j] != 1.) image.pixels[i][j] = 0.;
         }
     }
 
@@ -312,9 +332,9 @@ queue_t* solve_dijkstra(image_t image, position_t s, position_t t) {
     return solution;
 }
 
-void draw_solution(image_t original_image, queue_t* solution, pixel_t pixel, int n) {
+void draw_solution(colored_image_t original_image, queue_t* solution, colored_pixel_t pixel, int n) {
     // On crée une image de la même taille que l'image d'origine
-    image_t copy = image_copy(original_image);
+    colored_image_t copy = colored_image_copy(original_image);
     
     // On parcourt la liste de maillons
     while (!queue_is_empty(solution)) {
@@ -328,12 +348,12 @@ void draw_solution(image_t original_image, queue_t* solution, pixel_t pixel, int
     }
 
     // On affiche l'image
-    image_show(copy);
-    image_write(copy, "solution.png");
+    colored_image_show(copy);
+    colored_image_write(copy, "solution.png");
 
     // On libère la liste de maillons
     queue_free(solution);
 
     // On libère l'image
-    image_free(copy);
+    colored_image_free(copy);
 }
