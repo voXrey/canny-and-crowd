@@ -2,8 +2,8 @@ CXX = g++
 CXXFLAGS = -I/usr/include/opencv4 -I./libs
 LDFLAGS = -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lm
 
-TARGET = image_program.out
-SRCS = image.c libs/priority_queue.c libs/queue.c libs/image.c libs/image_usage.c
+TARGET = output.out
+SRCS = main.c libs/priority_queue.c libs/queue.c libs/image.c libs/image_usage.c libs/circular_list.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
