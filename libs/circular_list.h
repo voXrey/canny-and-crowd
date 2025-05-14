@@ -32,5 +32,7 @@ circular_list_t cl_next(circular_list_t cl);
 // Récupérer le précédent élément de la liste circulaire
 circular_list_t cl_prev(circular_list_t cl);
 
+// Vérifier si la liste circulaire est vide
+bool circular_list_is_empty(circular_list_t cl);
 
 #endif

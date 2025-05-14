@@ -64,3 +64,8 @@ circular_list_t cl_prev(circular_list_t cl) {
     if (cl == NULL) return NULL;
     return cl->prev;
 }
+
+// Vérifier si la liste circulaire est vide
+bool circular_list_is_empty(circular_list_t cl) {
+    return cl == NULL;
+}

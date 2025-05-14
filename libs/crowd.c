@@ -33,4 +33,107 @@ void environment_free(environment_t env) {
     free(env.agents);
 }
 
+// Faire parcourir un environnement par un agent
+void environment_move_agent(environment_t env, position_t start, position_t target) {
+    
+    // Initialiser les tableaux
+    position_t** pred = (position_t**) malloc(sizeof(position_t*) * env.rows);
+    double** dis = (double**) malloc(sizeof(double*) * env.rows);
+    bool** visited = (bool**) malloc(sizeof(bool*) * env.rows);
+    for (int i = 0; i < env.rows; i++) {
+        pred[i] = (position_t*) malloc(sizeof(position_t) * env.cols);
+        dis[i] = (double*) malloc(sizeof(double) * env.cols);
+        visited[i] = (bool*) malloc(sizeof(bool*) * env.cols);
+        for (int j = 0; j < env.cols; j++) {
+            pred[i][j] = (position_t){.i = -1, .j = -1};
+            dis[i][j] = INFINITY;
+            visited[i][j] = env.agents[i][j] == -1;
+        }
+    }
+    dis[start.i][start.j] = 0;
 
+    // Créer une file de priorité
+    priority_queue_t* pq = pq_create(env.rows * env.cols);
+    position_t* s = (position_t*) malloc(sizeof(position_t));
+    s->i = s.i;
+    s->j = s.j;
+    pq_push(pq, 0, (void*) s);
+
+    // Directions possibles
+    int directions[4][2] = {
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
+    };
+
+
+    // Algorithme principal
+    while (!pq_is_empty(pq)) {
+        position_t* p = (position_t*) pq_pop(pq);
+
+        if (visited[p->i][p->j]) continue;
+        visited[p->i][p->j] = true;
+
+        // Arrêter si on atteint la cible
+        if (p->i == target.i && p->j == target.j) break;
+
+        // Mettre à jour les voisins
+        for (int d = 0; d < 4; d++) {
+            int ni = p->i + directions[d][0];
+            int nj = p->j + directions[d][1];
+
+            if (ni >= 0 && ni < env.rows && nj >= 0 && nj < env.cols && !visited[ni][nj]) {
+                double new_dist = dis[p->i][p->j] + env.agents[ni][nj];
+                if (new_dist < dis[ni][nj]) {
+                    dis[ni][nj] = new_dist;
+                    pred[ni][nj] = *p;
+
+                    position_t* pos = (position_t*) malloc(sizeof(position_t));
+                    pos->i = ni;
+                    pos->j = nj;
+
+                    pq_push(pq, new_dist, (void*) pos);
+                }
+            }
+        }
+        free(p);
+    }
+    while (!pq_is_empty(pq)) {
+        position_t* p = (position_t*) pq_pop(pq);
+        free(p);
+    }
+
+    pq_free(pq);
+    
+    // Agir sur l'environnement
+    position_t current = target;
+    while (current.i != start.i && current.j != start.j) {
+        env.agents[current.i][current.j]++;
+        current = pred[current.i][current.j];
+    }
+    env.agents[start.i][start.j]++;
+
+    // Libérer les ressources
+    for (int i = 0; i < image.rows; i++) {
+        free(pred[i]);
+        free(dis[i]);
+        free(visited[i]);
+    }
+
+    free(pred);
+    free(dis);
+    free(visited);
+    free(s);
+}
+
+// Faire parcourir un environnement par plusieurs agents
+void environment_move(environment_t env, circular_list_t* movements) {
+    while (!circular_list_is_empty(*movements)) {
+        movement_t* m = (movement_t*) cl_get(*movements);
+        if (m->agents == 0) {
+            cl_remove(movements);
+            continue;
+        }
+        environment_move_agent(env, m->start, m->target);
+        m->agents--;
+        movements = cl_next(*movements);
+    }
+}
