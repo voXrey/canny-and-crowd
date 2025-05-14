@@ -237,6 +237,33 @@ void image_hysteresis(image_t image) {
     queue_free(queue);
 }
 
+// Application du filtre de Canny
+image_t canny(image_t image, double t_max, double t_min) {
+    // Flou gaussien
+    kernel_t kernel = create_gaussian_kernel(5, 1.0);
+    image_t blured_image = image_apply_filter(image, kernel);
+
+    // Appliquer le filtre de Sobel
+    image_t gradient_x, gradient_y;
+    image_apply_sobel(blured_image, &gradient_x, &gradient_y);
+
+    // Calculer la direction des gradients
+    image_t direction = image_compute_gradient_direction(gradient_x, gradient_y);
+    image_free(gradient_x);
+    image_free(gradient_y);
+
+    // Suppression des non-maxima locaux
+    image_t non_maxima = image_non_maxima_suppression(blured_image, direction);
+    image_free(blured_image);
+
+    // Appliquer un double seuil
+    image_double_threshold(non_maxima, t_max, t_min);
+
+    // Appliquer l'hystérésis
+    image_hysteresis(non_maxima);
+
+    return non_maxima;
+}
 
 
 /* PARCOURS DE L'IMAGE */

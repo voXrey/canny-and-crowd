@@ -39,6 +39,9 @@ void image_double_threshold(image_t image, double t_max, double t_min);
 // Applique une hystérésis pour tracer les contours
 void image_hysteresis(image_t image);
 
+// Application du filtre de Canny
+image_t canny(image_t image, double t_max, double t_min);
+
 // Résout un chemin entre deux positions avec Dijkstra
 queue_t* solve_dijkstra(image_t image, position_t s, position_t t);
 
