@@ -10,6 +10,8 @@
 #include "image.h"
 #include "logging.h"
 #include "config.h"
+#include "crowd.h"
+#include "circular_list.h"
 
 int main(int argc, char** argv) {
     // Chargement de la configuration
@@ -42,6 +44,19 @@ int main(int argc, char** argv) {
     image_show(image_thickened);
     image_write(image_thickened, "image_traitee.jpg");
 
+
+    // Test sur les environnements
+    environment_t env = env_from_image(image_thickened);
+    position_t s = {.i = 1000/n, .j = 741/n};
+    position_t t = {.i = 2420/n, .j = 2635/n};
+    env_move_agent(&env, s, t);
+    env_image_colored_edit(colored_image, env);
+    printf("Max : %d\n", env.max);
+    colored_image_show(colored_image);
+    env_free(env);
+
+
+    /*
     // Parcours
     position_t s = {.i = 965/n, .j = 741/n};
     position_t t = {.i = 2635/n, .j = 2420/n};
@@ -50,6 +65,8 @@ int main(int argc, char** argv) {
     draw_solution(colored_image, solution, pixel, n);
 
     colored_image_free(colored_image);
+    */
+
     image_free(canny_image);
     image_free(image_thickened);
 
