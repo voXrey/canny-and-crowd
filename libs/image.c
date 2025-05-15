@@ -5,12 +5,13 @@
 #include <stdbool.h>
 
 #include "image.h"
-
+#include "logging.h"
 
 // Fonctions pratiques
 
 // Copier une image en niveaux de gris
 image_t image_copy(image_t image) {
+    log_debug("Copie de l'image : %s", image.name);
     image_t copy = {
         .name = image.name,
         .rows = image.rows,
@@ -23,11 +24,13 @@ image_t image_copy(image_t image) {
             copy.pixels[i][j] = image.pixels[i][j];
         }
     }
+    log_debug("Image copiée : %s", image.name);
     return copy;
 }
 
 // Copier une image colorée
 colored_image_t colored_image_copy(colored_image_t image) {
+    log_debug("Copie de l'image colorée : %s", image.name);
     colored_image_t copy = {
         .name = image.name,
         .rows = image.rows,
@@ -40,6 +43,7 @@ colored_image_t colored_image_copy(colored_image_t image) {
             copy.pixels[i][j] = image.pixels[i][j];
         }
     }
+    log_debug("Image colorée copiée : %s", image.name);
     return copy;
 }
 
@@ -47,32 +51,41 @@ colored_image_t colored_image_copy(colored_image_t image) {
 
 // Libérer la mémoire d'une image en niveaux de gris
 void image_free(image_t image) {
+    log_debug("Libération de la mémoire de l'image : %s", image.name);
     for (int i = 0; i < image.rows; i++) {
         free(image.pixels[i]);
     }
     free(image.pixels);
+    log_debug("Mémoire de l'image libérée : %s", image.name);
 }
 
 // Libérer la mémoire d'une image colorée
 void colored_image_free(colored_image_t image) {
+    log_debug("Libération de la mémoire de l'image colorée : %s", image.name);
     for (int i = 0; i < image.rows; i++) {
         free(image.pixels[i]);
     }
     free(image.pixels);
+    log_debug("Mémoire de l'image colorée libérée : %s", image.name);
 }
 
 // Libérer la mémoire d'un noyau de convolution
 void kernel_free(kernel_t kernel) {
+    log_debug("Libération de la mémoire d'un noyau de convolution");
     for (int i = 0; i < kernel.size; i++) {
         free(kernel.data[i]);
     }
     free(kernel.data);
+    log_debug("Mémoire du noyau de convolution libérée");
 }
 
 // Fonctions de conversion
 
 // Convertir un cv::Mat en colored_image_t
 colored_image_t colored_image_from_mat(cv::Mat mat) {
+    log_debug("Conversion d'un cv::Mat en colored_image_t");
+    if (mat.empty()) log_fatal("Erreur lors de la conversion : cv::Mat vide");
+
     colored_image_t image = {
         .name = NULL,
         .rows = mat.rows,
@@ -90,12 +103,17 @@ colored_image_t colored_image_from_mat(cv::Mat mat) {
             };
         }
     }
+    log_debug("Conversion réussie : colored_image_t créé");
     return image;
 }
 
 // Convertir un colored_image_t en cv::Mat
 cv::Mat cvmat_from_colored_image(colored_image_t colored_image) {
+    log_debug("Conversion d'un colored_image_t en cv::Mat");
+
     cv::Mat mat(colored_image.rows, colored_image.cols, CV_8UC3);
+
+    if (mat.empty()) log_fatal("Erreur lors de la conversion : cv::Mat vide");
 
     for (int i = 0; i < colored_image.rows; i++) {
         for (int j = 0; j < colored_image.cols; j++) {
@@ -107,12 +125,19 @@ cv::Mat cvmat_from_colored_image(colored_image_t colored_image) {
             mat.at<cv::Vec3b>(i, j) = color;
         }
     }
+
+    log_debug("Conversion réussie : cv::Mat créé");
+
     return mat;
 }
 
 // Convertir un image_t en cv::Mat
 cv::Mat cvmat_from_image(image_t image) {
+    log_debug("Conversion d'un image_t en cv::Mat");
+
     cv::Mat mat(image.rows, image.cols, CV_8UC1);
+
+    if (mat.empty()) log_fatal("Erreur lors de la conversion : cv::Mat vide");
 
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
@@ -120,12 +145,14 @@ cv::Mat cvmat_from_image(image_t image) {
             mat.at<uchar>(i, j) = (uchar)(image.pixels[i][j] * 255.0);
         }
     }
+    log_debug("Conversion réussie : cv::Mat créé");
 
     return mat;
 }
 
 // Convertir un colored_image_t en image_t (niveaux de gris avec pondérations)
 image_t image_from_colored_image(colored_image_t colored_image) {
+    log_debug("Conversion d'un colored_image_t en image_t : %s", colored_image.name);
     image_t image = {
         .name = colored_image.name,
         .rows = colored_image.rows,
@@ -141,6 +168,7 @@ image_t image_from_colored_image(colored_image_t colored_image) {
             image.pixels[i][j] = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b) / 255.0;
         }
     }
+    log_debug("Conversion réussie : %s", colored_image.name);
     return image;
 }
 
@@ -148,11 +176,12 @@ image_t image_from_colored_image(colored_image_t colored_image) {
 
 // Lire une image en niveaux de gris
 colored_image_t image_read(const char* path) {
+    // Lire l'image avec OpenCV
+    log_debug("Lecture de l'image : %s", path);
+
     cv::Mat mat = cv::imread(path, cv::IMREAD_COLOR);
-    if (mat.empty()) {
-        fprintf(stderr, "Erreur lors de la lecture de l'image : %s\n", path);
-        exit(EXIT_FAILURE);
-    }
+    if (mat.empty()) log_fatal("Erreur lors de la lecture de l'image : %s", path);
+
     colored_image_t image = colored_image_from_mat(mat);
     image.name = strdup(path); // Dupliquer le nom du fichier
     return image;
@@ -160,43 +189,62 @@ colored_image_t image_read(const char* path) {
 
 // Ecrire une image en niveaux de gris
 void image_write(image_t image, const char* path) {
+    log_debug("Écriture de l'image : %s dans %s", image.name, path);
+
     cv::Mat img = cvmat_from_image(image);
     cv::imwrite(path, img);
+
+    log_debug("Image écrite : %s dans %s", image.name, path);
 }
 
 // Ecrire une image colorée
 void colored_image_write(colored_image_t image, const char* path) {
+    log_debug("Écriture de l'image colorée : %s dans %s", image.name, path);
+
     cv::Mat img = cvmat_from_colored_image(image);
     cv::imwrite(path, img);
+
+    log_debug("Image colorée écrite : %s dans %s", image.name, path);
 }
 
 // Fonctions d'affichage
 
 // Afficher une image colorée
 void colored_image_show(colored_image_t image) {
+    log_debug("Affichage de l'image colorée : %s", image.name);
+
     cv::Mat img = cvmat_from_colored_image(image);
     fprintf(stderr, "Affichage de l'image : %s\n", image.name);
     cv::namedWindow(image.name, cv::WINDOW_NORMAL);
     cv::imshow(image.name, img);
+
+    log_debug("Image colorée affichée (en attente d'action) : %s", image.name);
     cv::waitKey(0); // se ferme après un appui sur une touche
+    log_debug("Fermeture de l'image colorée : %s", image.name);
 }
 
 // Afficher une image en niveaux de gris
 void image_show(image_t image) {
+    log_debug("Affichage de l'image en niveaux de gris : %s", image.name);
+
     // Convertir l'image_t en cv::Mat
     cv::Mat mat = cvmat_from_image(image);
 
     // Afficher l'image avec OpenCV
     cv::namedWindow(image.name ? image.name : "Image en niveaux de gris", cv::WINDOW_NORMAL);
     cv::imshow(image.name ? image.name : "Image en niveaux de gris", mat);
+    log_debug("Image en niveaux de gris affichée (en attente d'action): %s", image.name);
     cv::waitKey(0); // Se ferme après un appui sur une touche
+    log_debug("Fermeture de l'image en niveaux de gris : %s", image.name);
 }
 
 // Fonctions de manipulation d'images
 
 // Réduire la taille d'une image
 image_t image_resize(image_t image, int scale) {
-    assert(scale > 0);
+    log_debug("Redimensionnement de l'image : %s avec un facteur de réduction de %d", image.name, scale);
+    if (sacle <= 0) log_fatal("Erreur de redimensionnement : facteur de réduction invalide (%d)", scale);
+
     int new_rows = image.rows / scale;
     int new_cols = image.cols / scale;
     image_t scaled = {
@@ -223,11 +271,13 @@ image_t image_resize(image_t image, int scale) {
             scaled.pixels[i][j] = pixel_moyen;
         }
     }
+    log_debug("Image redimensionnée : %s avec un facteur de réduction de %d", image.name, scale);
     return scaled;
 }
 
 // Appliquer un filtre à une image
 image_t image_apply_filter(image_t image, kernel_t kernel) {
+    log_debug("Application d'un filtre à l'image : %s", image.name);
     image_t result = image_copy(image);
 
     int border = kernel.size / 2;
@@ -247,11 +297,13 @@ image_t image_apply_filter(image_t image, kernel_t kernel) {
             result.pixels[i][j] = intensity;
         }
     }
+    log_debug("Filtre appliqué à l'image : %s", image.name);
     return result;
 }
 
 // Epaissir certains pixels
 image_t image_thicken(image_t image, int n, pixel_t intensity) {
+    log_debug("Épaississement de l'image : %s avec un facteur de %d pour les pixels d'intensité %ld", image.name, n, intensity);
     image_t copy = image_copy(image);
 
     for (int i = 0; i < image.rows; i++) {
@@ -267,5 +319,6 @@ image_t image_thicken(image_t image, int n, pixel_t intensity) {
             }
         }
     }
+    log_debug("Épaississement terminé : %s", image.name);
     return copy;
 }

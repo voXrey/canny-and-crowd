@@ -8,10 +8,12 @@
 #include "image_usage.h"
 #include "queue.h"
 #include "priority_queue.h"
+#include "logging.h"
 
 
 // Créer un noyau gaussien de taille size et d'écart-type sigma
 kernel_t create_gaussian_kernel(int size, double sigma) {
+    log_debug("Création d'un noyau gaussien de taille %d et d'écart-type %.2f", size, sigma);
     kernel_t kernel = {
         .size = size,
         .data = (double**) malloc(sizeof(double*) * size)
@@ -31,11 +33,13 @@ kernel_t create_gaussian_kernel(int size, double sigma) {
             kernel.data[i][j] /= sum;
         }
     }
+    log_debug("Noyau gaussien créé de taille %d et d'écart-type %.2f", size, sigma);
     return kernel;
 }
 
 // Créer le noyau de Sobel selon l'axe des x
 kernel_t create_sobel_kernel_x() {
+    log_debug("Création du noyau de Sobel selon l'axe des x");
     kernel_t kernel = {
         .size = 3,
         .data = (double**) malloc(sizeof(double*) * 3)
@@ -47,11 +51,15 @@ kernel_t create_sobel_kernel_x() {
     kernel.data[0][0] = -1; kernel.data[0][1] = -2; kernel.data[0][2] = -1;
     kernel.data[1][0] = 0; kernel.data[1][1] = 0; kernel.data[1][2] = 0;
     kernel.data[2][0] = 1; kernel.data[2][1] = 2; kernel.data[2][2] = 1;
+
+    log_debug("Noyau de Sobel créé selon l'axe des x");
+
     return kernel;
 }
 
 // Créer le noyau de Sobel selon l'axe des y
 kernel_t create_sobel_kernel_y() {
+    log_debug("Création du noyau de Sobel selon l'axe des y");
     kernel_t kernel = {
         .size = 3,
         .data = (double**) malloc(sizeof(double*) * 3)
@@ -63,11 +71,15 @@ kernel_t create_sobel_kernel_y() {
     kernel.data[0][0] = -1; kernel.data[0][1] = 0; kernel.data[0][2] = 1;
     kernel.data[1][0] = -2; kernel.data[1][1] = 0; kernel.data[1][2] = 2;
     kernel.data[2][0] = -1; kernel.data[2][1] = 0; kernel.data[2][2] = 1;
+
+    log_debug("Noyau de Sobel créé selon l'axe des y");
+
     return kernel;
 }
 
 // Appliquer un filtre de Sobel à un image_t (avec extension de l'image) et calcule les gradients
 void image_apply_sobel(image_t image, image_t* gradient_x, image_t* gradient_y) {
+    log_debug("Application du filtre de Sobel à l'image : %s", image.name);
     kernel_t kernel_x = create_sobel_kernel_x();
     kernel_t kernel_y = create_sobel_kernel_y();
 
@@ -77,21 +89,23 @@ void image_apply_sobel(image_t image, image_t* gradient_x, image_t* gradient_y) 
     *gradient_x = image_apply_filter(copy1, kernel_x);
     *gradient_y = image_apply_filter(copy2, kernel_y);
 
-    image_free(copy1);
-    image_free(copy2);
-
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
             image.pixels[i][j] = sqrt(pow(gradient_x->pixels[i][j], 2) + pow(gradient_y->pixels[i][j], 2));
         }
     }
+    image_free(copy1);
+    image_free(copy2);
     kernel_free(kernel_x);
     kernel_free(kernel_y);
+
+    log_debug("Filtre de Sobel appliqué à l'image : %s", image.name);
 }
 
 
 // Calculer la direction des gradients
 image_t image_compute_gradient_direction(image_t gradient_x, image_t gradient_y) {
+    log_debug("Calcul de la direction des gradients");
     image_t direction = image_copy(gradient_x);
 
     for (int i = 0; i < gradient_x.rows; i++) {
@@ -102,12 +116,15 @@ image_t image_compute_gradient_direction(image_t gradient_x, image_t gradient_y)
     image_free(gradient_x);
     image_free(gradient_y);
 
+    log_debug("Direction des gradients calculée");
+
     return direction;
 }
 
 
 // Suppression des non-maxima locaux
 image_t image_non_maxima_suppression(image_t image, image_t direction) {
+    log_debug("Suppression des non-maxima locaux");
     image_t result = image_copy(image);
 
     for (int i = 1; i < image.rows-1; i++) {
@@ -140,12 +157,15 @@ image_t image_non_maxima_suppression(image_t image, image_t direction) {
         }
     }
     image_free(direction);
+
+    log_debug("Suppression des non-maxima locaux terminée");
     return result;
 }
 
 
 // Appliquer un double seuil
 void image_double_threshold(image_t image, double t_max, double t_min) {
+    log_debug("Application d'un double seuil : t_max = %.2f, t_min = %.2f", t_max, t_min);
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
             // Si l'intensité est assez forte on garde le pixel
@@ -162,6 +182,7 @@ void image_double_threshold(image_t image, double t_max, double t_min) {
             }
         }
     }
+    log_debug("Double seuil appliqué");
 }
 
 // Tracer les contours en contact avec un pixel fort
@@ -201,6 +222,7 @@ void image_hysteresis_aux(image_t image, bool** visited, int i, int j, queue_t* 
 
 // Tracer les contours d'une image avec une hystérésis
 void image_hysteresis(image_t image) {
+    log_debug("Application de l'hystérésis sur l'image : %s", image.name);
     // Initialiser la matrice des pixels visités
     bool** visited = (bool**) malloc(sizeof(bool*) * image.rows);
     for (int i = 0; i < image.rows; i++) {
@@ -235,10 +257,14 @@ void image_hysteresis(image_t image) {
     }
     free(visited);
     queue_free(queue);
+
+    log_debug("Hystérésis appliquée sur l'image : %s", image.name);
 }
 
 // Application du filtre de Canny
 image_t canny(image_t image, double t_max, double t_min) {
+    log_debug("Application du filtre de Canny sur l'image : %s", image.name);
+
     // Flou gaussien
     kernel_t kernel = create_gaussian_kernel(5, 1.0);
     image_t blured_image = image_apply_filter(image, kernel);
@@ -262,12 +288,16 @@ image_t canny(image_t image, double t_max, double t_min) {
     // Appliquer l'hystérésis
     image_hysteresis(non_maxima);
 
+    log_debug("Filtre de Canny appliqué sur l'image : %s", image.name);
+
     return non_maxima;
 }
 
 
 /* PARCOURS DE L'IMAGE */
 queue_t* solve_dijkstra(image_t image, position_t s, position_t t) {
+    log_debug("Parcours de l'image avec Dijkstra : %s", image.name);
+
     // Initialiser les tableaux
     position_t** pred = (position_t**) malloc(sizeof(position_t*) * image.rows);
     double** dis = (double**) malloc(sizeof(double*) * image.rows);
@@ -356,10 +386,14 @@ queue_t* solve_dijkstra(image_t image, position_t s, position_t t) {
     free(dis);
     free(visited);
 
+    log_debug("Parcours de l'image avec Dijkstra terminé : %s", image.name);
+
     return solution;
 }
 
 void draw_solution(colored_image_t original_image, queue_t* solution, colored_pixel_t pixel, int n) {
+    log_debug("Dessin de la solution sur l'image : %s", original_image.name);
+
     // On crée une image de la même taille que l'image d'origine
     colored_image_t copy = colored_image_copy(original_image);
     
@@ -383,4 +417,6 @@ void draw_solution(colored_image_t original_image, queue_t* solution, colored_pi
 
     // On libère l'image
     colored_image_free(copy);
+
+    log_debug("Dessin solution terminé : %s", original_image.name);
 }

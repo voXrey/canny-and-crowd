@@ -6,10 +6,12 @@
 #include "image.h"
 #include "image_usage.h"
 #include "circular_list.h"
-
+#include "logging.h"
 
 // Créer un environnement à partir d'une image
 environment_t env_from_image(image_t image) {
+    log_debug("Création d'un environnement à partir de l'image : %s", image.name);
+
     environment_t env {
         .rows = image.rows,
         .cols = image.cols,
@@ -23,15 +25,21 @@ environment_t env_from_image(image_t image) {
             else env.agents[i][j] = 0;
         }
     }
+    log_debug("Environnement créé à partir de l'image : %s", image.name);
+
     return env;
 }
 
 // Libérer la mémoire occupée par un environnement
 void env_free(environment_t env) {
+    log_debug("Libération de la mémoire d'un environnement");
+
     for (int i = 0; i < env.rows; i++) {
         free(env.agents[i]);
     }
     free(env.agents);
+
+    log_debug("Mémoire de l'environnement libérée");
 }
 
 // Faire parcourir un environnement par un agent
@@ -130,6 +138,8 @@ void env_move_agent(environment_t env, position_t start, position_t target) {
 
 // Faire parcourir un environnement par plusieurs agents
 void env_move(environment_t env, circular_list_t* movements) {
+    log_debug("Déplacement des agents dans un environnement");
+
     while (!circular_list_is_empty(*movements)) {
         movement_t* m = (movement_t*) cl_get(*movements);
         if (m->agents == 0) {
@@ -140,10 +150,13 @@ void env_move(environment_t env, circular_list_t* movements) {
         m->agents--;
         movements = cl_next(*movements);
     }
+    log_debug("Déplacement des agents terminé");
 }
 
 // Modifier une image en fonction de l'environnement
 void env_image_edit(image_t* image, environment_t env) {
+    log_debug("Modification de l'image en fonction de l'environnement : %s", image->name);
+
     if (env.max == 0) return;
     for (int i = 0; i < env.rows; i++) {
         for (int j = 0; j < env.cols; j++) {
@@ -152,10 +165,13 @@ void env_image_edit(image_t* image, environment_t env) {
             }
         }
     }
+    log_debug("Image modifiée en fonction de l'environnement : %s", image->name);
 }
 
 // Modifier une image colorée en fonction de l'environnement
 void env_image_color_edit(image_t* image, environment_t env) {
+    log_debug("Modification de l'image colorée en fonction de l'environnement : %s", image->name);
+
     if (env.max == 0) return;
     for (int i = 0; i < env.rows; i++) {
         for (int j = 0; j < env.cols; j++) {
@@ -166,4 +182,5 @@ void env_image_color_edit(image_t* image, environment_t env) {
             }
         }
     }
+    log_debug("Image colorée modifiée en fonction de l'environnement : %s", image->name);
 }

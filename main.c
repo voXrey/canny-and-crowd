@@ -8,17 +8,17 @@
 #include "queue.h"
 #include "image_usage.h"
 #include "image.h"
+#include "logging.h"
+#include "config.h"
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        printf("Usage: %s <image_path>\n", argv[0]);
-        return -1;
-    }
+    // Chargement de la configuration
+    config_load("config.conf");
 
-    fprintf(stderr, "Lecture de l'image : %s...\n", argv[1]);
+    if (argc != 2) log_fatal("Usage : %s <image>", argv[0]);
+
 
     colored_image_t colored_image = image_read(argv[1]);    
-    fprintf(stderr, "Image lue et convertie\n");
     
     colored_image_show(colored_image);
 
@@ -26,7 +26,6 @@ int main(int argc, char** argv) {
     image_show(image);
 
     // Si l'image est trop grande on la réduit en-dessous d'une image en 1280x720
-    fprintf(stderr, "Réduction de la taille de l'image...\n");
     int n1 = image.rows / 720;
     int n2 = image.cols / 1280;
     int n = n1 > n2 ? n1 : n2;
@@ -36,11 +35,9 @@ int main(int argc, char** argv) {
     image_show(image);
 
     // Application du filtre de Canny
-    fprintf(stderr, "Application du filtre de Canny...\n");
     image_t canny_image = canny(image, 0.1, 0.2);
 
     // Parcours
-    fprintf(stderr, "Parcours de l'image\n");
     position_t s = {.i = 965/n, .j = 741/n};
     position_t t = {.i = 2635/n, .j = 2420/n};
     queue_t* solution = solve_dijkstra(canny_image, s, t);
