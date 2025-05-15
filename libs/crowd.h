@@ -4,6 +4,7 @@
 
 #include "image.h"
 #include "image_usage.h"
+#include "circular_list.h"
 
 struct environment_s {
     int rows;
@@ -17,7 +18,7 @@ struct movement_s {
     position_t start;
     position_t target;
     int agents;
-}
+};
 typedef struct movement_s movement_t;
 
 
@@ -37,6 +38,6 @@ void env_move(environment_t env, circular_list_t* movements);
 void env_image_edit(image_t* image, environment_t env);
 
 // Modifier une image colorée en fonction de l'environnement
-void env_image_color_edit(image_t* image, environment_t env);
+void env_image_colored_edit(colored_image_t* image, environment_t env);
 
 #endif

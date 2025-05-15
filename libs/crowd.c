@@ -17,7 +17,7 @@ environment_t env_from_image(image_t image) {
         .cols = image.cols,
         .agents = (int**) malloc(sizeof(int*) * env.rows),
         .max = 0
-    }
+    };
     for (int i = 0; i < env.rows; i++) {
         env.agents[i] = (int*) malloc(sizeof(int) * env.cols);
         for (int j = 0; j < env.cols; j++) {
@@ -64,8 +64,8 @@ void env_move_agent(environment_t env, position_t start, position_t target) {
     // Créer une file de priorité
     priority_queue_t* pq = pq_create(env.rows * env.cols);
     position_t* s = (position_t*) malloc(sizeof(position_t));
-    s->i = s.i;
-    s->j = s.j;
+    s->i = start.i;
+    s->j = start.j;
     pq_push(pq, 0, (void*) s);
 
     // Directions possibles
@@ -124,7 +124,7 @@ void env_move_agent(environment_t env, position_t start, position_t target) {
     env.agents[start.i][start.j]++;
 
     // Libérer les ressources
-    for (int i = 0; i < image.rows; i++) {
+    for (int i = 0; i < env.rows; i++) {
         free(pred[i]);
         free(dis[i]);
         free(visited[i]);
@@ -148,7 +148,7 @@ void env_move(environment_t env, circular_list_t* movements) {
         }
         env_move_agent(env, m->start, m->target);
         m->agents--;
-        movements = cl_next(*movements);
+        *movements = cl_next(*movements);
     }
     log_debug("Déplacement des agents terminé");
 }
@@ -169,7 +169,7 @@ void env_image_edit(image_t* image, environment_t env) {
 }
 
 // Modifier une image colorée en fonction de l'environnement
-void env_image_color_edit(image_t* image, environment_t env) {
+void env_image_colored_edit(colored_image_t* image, environment_t env) {
     log_debug("Modification de l'image colorée en fonction de l'environnement : %s", image->name);
 
     if (env.max == 0) return;

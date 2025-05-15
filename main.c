@@ -36,17 +36,22 @@ int main(int argc, char** argv) {
 
     // Application du filtre de Canny
     image_t canny_image = canny(image, 0.1, 0.2);
+    
+    // Epaississement de l'image
+    image_t image_thickened = image_thicken(canny_image, 3, 1.);
+    image_show(image_thickened);
+    image_write(image_thickened, "image_traitee.jpg");
 
     // Parcours
     position_t s = {.i = 965/n, .j = 741/n};
     position_t t = {.i = 2635/n, .j = 2420/n};
-    queue_t* solution = solve_dijkstra(canny_image, s, t);
+    queue_t* solution = solve_dijkstra(image_thickened, s, t);
     colored_pixel_t pixel = {.r = 0, .g = 0, .b = 0};
     draw_solution(colored_image, solution, pixel, n);
 
     colored_image_free(colored_image);
     image_free(canny_image);
-    queue_free(solution);
+    image_free(image_thickened);
 
     return 0;
 }

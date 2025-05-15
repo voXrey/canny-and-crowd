@@ -8,7 +8,7 @@ struct circular_list_node_s {
 };
 typedef struct circular_list_node_s circular_list_node_t;
 
-typedef circular_list circular_list_t;
+typedef circular_list_node_t* circular_list_t;
 
 
 // Ajouter un élément à la liste circulaire (avant l'élément donné en argument)

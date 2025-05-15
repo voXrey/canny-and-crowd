@@ -113,9 +113,6 @@ image_t image_compute_gradient_direction(image_t gradient_x, image_t gradient_y)
             direction.pixels[i][j] = atan2(gradient_x.pixels[i][j], gradient_y.pixels[i][j]);
         }
     }
-    image_free(gradient_x);
-    image_free(gradient_y);
-
     log_debug("Direction des gradients calculée");
 
     return direction;

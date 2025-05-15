@@ -214,7 +214,6 @@ void colored_image_show(colored_image_t image) {
     log_debug("Affichage de l'image colorée : %s", image.name);
 
     cv::Mat img = cvmat_from_colored_image(image);
-    fprintf(stderr, "Affichage de l'image : %s\n", image.name);
     cv::namedWindow(image.name, cv::WINDOW_NORMAL);
     cv::imshow(image.name, img);
 
@@ -243,7 +242,7 @@ void image_show(image_t image) {
 // Réduire la taille d'une image
 image_t image_resize(image_t image, int scale) {
     log_debug("Redimensionnement de l'image : %s avec un facteur de réduction de %d", image.name, scale);
-    if (sacle <= 0) log_fatal("Erreur de redimensionnement : facteur de réduction invalide (%d)", scale);
+    if (scale <= 0) log_fatal("Erreur de redimensionnement : facteur de réduction invalide (%d)", scale);
 
     int new_rows = image.rows / scale;
     int new_cols = image.cols / scale;
