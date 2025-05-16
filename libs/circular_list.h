@@ -10,15 +10,17 @@ typedef struct circular_list_node_s circular_list_node_t;
 
 typedef circular_list_node_t* circular_list_t;
 
+// Créer une liste circulaire vide
+circular_list_t cl_create();
 
 // Ajouter un élément à la liste circulaire (avant l'élément donné en argument)
-void cl_add(circular_list_t cl, void* value);
+void cl_add(circular_list_t* cl, void* value);
 
 // Supprimer un élément de la liste circulaire
 void cl_remove(circular_list_t* cl);
 
 // Libérer la mémoire occupée par la liste circulaire
-void cl_free(circular_list_t* cl);
+void cl_free(circular_list_t cl);
 
 // Récupérer la valeur d'un élément de la liste circulaire
 void* cl_get(circular_list_t cl);

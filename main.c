@@ -48,10 +48,17 @@ int main(int argc, char** argv) {
     // Test sur les environnements
     environment_t env = env_from_image(image_thickened);
     position_t s = {.i = 1000/n, .j = 741/n};
-    position_t t = {.i = 2420/n, .j = 2635/n};
-    env_move_agent(&env, s, t);
-    env_image_colored_edit(colored_image, env);
-    printf("Max : %d\n", env.max);
+    position_t t = {.i = 2635/n, .j = 2420/n};
+
+
+    movement_t m = {.start = s, .target = t, .agents = 10};
+
+    circular_list_t movements = cl_create();
+    cl_add(&movements, (void*) &m);
+    env_move(&env, movements);
+    cl_free(movements);
+    
+    env_image_colored_edit(colored_image, env, n);
     colored_image_show(colored_image);
     env_free(env);
 

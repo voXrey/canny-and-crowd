@@ -32,12 +32,12 @@ void env_free(environment_t env);
 void env_move_agent(environment_t* env, position_t start, position_t target);
 
 // Faire parcourir un environnement par plusieurs agents
-void env_move(environment_t* env, circular_list_t* movements);
+void env_move(environment_t* env, circular_list_t movements);
 
 // Modifier une image en fonction de l'environnement
-void env_image_edit(image_t image, environment_t env);
+void env_image_edit(image_t image, environment_t env, int n);
 
 // Modifier une image colorée en fonction de l'environnement
-void env_image_colored_edit(colored_image_t image, environment_t env);
+void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 
 #endif

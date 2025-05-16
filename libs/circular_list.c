@@ -3,17 +3,26 @@
 
 #include "circular_list.h"
 
+// Créer une liste circulaire
+circular_list_t cl_create() {
+    return NULL;
+}
 
-// Ajouter un élément à la liste circulaire (avant l'élément donné en argument)
-void cl_add(circular_list_t cl, void* value) {
+// Ajouter un élément à la liste circulaire (avant l'élément courant)
+void cl_add(circular_list_t* cl, void* value) {
     circular_list_node_t* node = (circular_list_node_t*) malloc(sizeof(circular_list_node_t));
-    node->next = cl;
-    if (cl != NULL) {
-        cl->prev = node;
-        node->prev = cl->prev;
-    }
-    else node ->prev = node;
     node->value = value;
+
+    if (*cl == NULL) {
+        node->next = node;
+        node->prev = node;
+    } else {
+        node->next = *cl;
+        node->prev = (*cl)->prev;
+        (*cl)->prev->next = node;
+        (*cl)->prev = node;
+    }
+    *cl = node;
 }
 
 // Supprimer un élément de la liste circulaire
@@ -21,6 +30,9 @@ void cl_remove(circular_list_t* cl) {
     if (*cl == NULL) return;
     circular_list_node_t* node = *cl;
     
+    if (node->next == node) *cl = NULL;
+    else *cl = node->next;
+
     if (node->prev != NULL) {
         node->prev->next = node->next;
     }
@@ -28,16 +40,13 @@ void cl_remove(circular_list_t* cl) {
         node->next->prev = node->prev;
     }
 
-    if (node->prev == node) *cl = NULL;
-    else *cl = node->next;
-
     free(node);
 }
 
 // Libérer la mémoire occupée par la liste circulaire
-void cl_free(circular_list_t* cl) {
-    while (*cl != NULL) {
-        cl_remove(cl);
+void cl_free(circular_list_t cl) {
+    while (cl != NULL) {
+        cl_remove(&cl);
     }
 }
 

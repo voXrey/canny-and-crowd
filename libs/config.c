@@ -11,7 +11,7 @@ void config_load(const char* filename) {
         fprintf(stderr, "Erreur lors de l'ouverture du fichier de configuration : %s\n", filename);
         return;
     }
-    fscanf(file, "DEBUG==%d\n", &DEBUG_MODE);
+    fscanf(file, "DEBUG_MODE==%d\n", &DEBUG_MODE);
     fclose(file);
-    fprint(stderr, "debug mode : %d\n", DEBUG_MODE);
+    fprintf(stderr, "debug mode : %d\n", DEBUG_MODE);
 }

@@ -140,31 +140,40 @@ void env_move_agent(environment_t* env, position_t start, position_t target) {
 }
 
 // Faire parcourir un environnement par plusieurs agents
-void env_move(environment_t* env, circular_list_t* movements) {
+void env_move(environment_t* env, circular_list_t movements) {
     log_debug("Déplacement des agents dans un environnement");
 
-    while (!circular_list_is_empty(*movements)) {
-        movement_t* m = (movement_t*) cl_get(*movements);
+    while (!circular_list_is_empty(movements)) {
+        movement_t* m = (movement_t*) cl_get(movements);
         if (m->agents == 0) {
-            cl_remove(movements);
+            cl_remove(&movements);
             continue;
         }
         env_move_agent(env, m->start, m->target);
         m->agents--;
-        *movements = cl_next(*movements);
+        movements = cl_next(movements);
     }
     log_debug("Déplacement des agents terminé");
 }
 
 // Modifier une image en fonction de l'environnement
-void env_image_edit(image_t image, environment_t env) {
+void env_image_edit(image_t image, environment_t env, int n) {
     log_debug("Modification de l'image en fonction de l'environnement : %s", image.name);
 
     if (env.max == 0) return;
     for (int i = 0; i < env.rows; i++) {
         for (int j = 0; j < env.cols; j++) {
-            if (env.agents[i][j] > 0) {
-                image.pixels[i][j] = (double) env.agents[i][j] / (double) env.max;
+
+            if (env.agents[i][j] > -1) {
+                pixel_t pix = (double) env.agents[i][j] / (double) env.max;
+
+                for (int k = 0; k < n; k++) {
+                    if (i * n + k >= image.rows) break;
+                    for (int l = 0; l < n; l++) {
+                        if (j * n + l >= image.cols) break;
+                        image.pixels[i * n + k][j * n + l] = pix;
+                    }
+                }
             }
         }
     }
@@ -172,16 +181,27 @@ void env_image_edit(image_t image, environment_t env) {
 }
 
 // Modifier une image colorée en fonction de l'environnement
-void env_image_colored_edit(colored_image_t image, environment_t env) {
+void env_image_colored_edit(colored_image_t image, environment_t env, int n) {
     log_debug("Modification de l'image colorée en fonction de l'environnement : %s", image.name);
 
     if (env.max == 0) return;
     for (int i = 0; i < env.rows; i++) {
         for (int j = 0; j < env.cols; j++) {
+
             if (env.agents[i][j] > 0) {
-                image.pixels[i][j].r = 255. * (1. - (double) env.agents[i][j] / (double) env.max);
-                image.pixels[i][j].g = 0;
-                image.pixels[i][j].b = 0;
+                colored_pixel_t pix {
+                    .r = 255. * (1. - (double) env.agents[i][j] / (double) env.max),
+                    .g = 0,
+                    .b = 0
+                };
+
+                for (int k = 0; k < n; k++) {
+                    if (i * n + k >= image.rows) break;
+                    for (int l = 0; l < n; l++) {
+                        if (j * n + l >= image.cols) break;
+                        image.pixels[i * n + k][j * n + l] = pix;
+                    }
+                }
             }
         }
     }
