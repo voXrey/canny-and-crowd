@@ -141,18 +141,18 @@ void env_move_agent(environment_t* env, position_t start, position_t target) {
 }
 
 // Faire parcourir un environnement par plusieurs agents
-void env_move(environment_t* env, circular_list_t movements) {
+void env_move(environment_t* env, circular_list_t* movements) {
     log_debug("Déplacement des agents dans un environnement");
 
-    while (!circular_list_is_empty(movements)) {
+    while (!cl_is_empty(movements)) {
         movement_t* m = (movement_t*) cl_get(movements);
         if (m->agents == 0) {
-            cl_remove(&movements);
+            cl_remove(movements);
             continue;
         }
         env_move_agent(env, m->start, m->target);
         m->agents--;
-        movements = cl_next(movements);
+        cl_next(movements);
     }
     log_debug("Déplacement des agents terminé");
 }

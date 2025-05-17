@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     position_t t1 = {.i = 2635/n, .j = 2420/n};
     movement_t m1 = {.start = s1, .target = t1, .agents = 100};
 
-    circular_list_node_t* movements = load_movements(movements_file_path);
+    circular_list_t* movements = load_movements(movements_file_path);
 
     move_env_a_star(m1, &env);
     
@@ -62,7 +62,6 @@ int main(int argc, char** argv) {
     colored_image_show(colored_image);
     env_free(env);
 
-    // TODO : résoudre le free des listes circulaires (segfault)
 
     /*
     // Parcours

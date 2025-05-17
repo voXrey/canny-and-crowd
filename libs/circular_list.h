@@ -10,33 +10,37 @@ struct circular_list_node_s {
 };
 typedef struct circular_list_node_s circular_list_node_t;
 
-typedef circular_list_node_t* circular_list_t;
+struct circular_list_s {
+    circular_list_node_t* head;
+    int size;
+};
+typedef struct circular_list_s circular_list_t;
 
 // Créer une liste circulaire vide
-circular_list_t cl_create();
+circular_list_t* cl_create();
 
-// Ajouter un élément à la liste circulaire (avant l'élément donné en argument)
+// Ajouter un élément à la liste circulaire (placé en tête)
 void cl_add(circular_list_t* cl, void* value);
 
-// Supprimer un élément de la liste circulaire
+// Supprimer un élément de la liste circulaire (celui en tête)
 void cl_remove(circular_list_t* cl);
 
 // Libérer la mémoire occupée par la liste circulaire
-void cl_free(circular_list_t cl);
+void cl_free(circular_list_t* cl);
 
-// Récupérer la valeur d'un élément de la liste circulaire
-void* cl_get(circular_list_t cl);
+// Récupérer la valeur d'un élément de la liste circulaire (celui en tête)
+void* cl_get(circular_list_t* cl);
 
-// Définir la valeur d'un élément de la liste circulaire
-void cl_set(circular_list_t cl, void* value);
+// Définir la valeur d'un élément de la liste circulaire (celui en tête)
+void cl_set(circular_list_t* cl, void* value);
 
-// Récupérer le prochain élément de la liste circulaire
-circular_list_t cl_next(circular_list_t cl);
+// Passer à l'élément suivant de la liste circulaire
+void cl_next(circular_list_t* cl);
 
-// Récupérer le précédent élément de la liste circulaire
-circular_list_t cl_prev(circular_list_t cl);
+// Passer à l'élément précédent de la liste circulaire
+void cl_prev(circular_list_t* cl);
 
 // Vérifier si la liste circulaire est vide
-bool circular_list_is_empty(circular_list_t cl);
+bool cl_is_empty(circular_list_t* cl);
 
 #endif
