@@ -19,61 +19,38 @@ int main(int argc, char** argv) {
     // Chargement de la configuration
     config_load("config.conf");
 
-    if (argc != 3) log_fatal("Usage : %s <image> <movements-file>", argv[0]);
+    if (argc < 4 || 5 < argc) log_fatal("Usage : %s <image> <movements-file> <weight> [compression]", argv[0]);
     const char* movements_file_path = argv[2];
+    int weight = atoi(argv[3]);
+    int n = 1;
 
     colored_image_t colored_image = image_read(argv[1]);    
-    
-    //colored_image_show(colored_image);
-
     image_t image = image_from_colored_image(colored_image);
-    //image_show(image);
 
-    // Si l'image est trop grande on la réduit en-dessous d'une image en 1280x720
-    int n1 = image.rows / 720;
-    int n2 = image.cols / 1280;
-    int n = n1 > n2 ? n1 : n2;
-    if (n > 1) {
+    if (argc == 5) {
+        n = atoi(argv[4]);
         image = image_resize(image, n);
     }
-    //image_show(image);
 
     // Application du filtre de Canny
-    image_t canny_image = canny(image, 0.1, 0.2);
+    image_t canny_image = canny(image, 0.2, 0.4);
     
     // Epaississement de l'image
-    image_t image_thickened = image_thicken(canny_image, 3, 1.);
-    //image_show(image_thickened);
+    image_t image_thickened = image_thicken(canny_image, 1, 1.);
     image_write(image_thickened, "pictures/image_traitee.jpg");
 
 
     // Test sur les environnements
     environment_t env = env_from_image(image_thickened);
 
-    position_t s1 = {.i = 1000/n, .j = 741/n};
-    position_t t1 = {.i = 2635/n, .j = 2420/n};
-    movement_t m1 = {.start = s1, .target = t1, .agents = 100};
-
     circular_list_t* movements = load_movements(movements_file_path, n);
-    multiple_move_env_a_star(movements, &env);
+    multiple_move_env_a_star(movements, &env, weight);
     free_movements(movements);
     
     env_image_colored_edit(colored_image, env, n);
     colored_image_show(colored_image);
+
     env_free(env);
-
-
-    /*
-    // Parcours
-    position_t s = {.i = 965/n, .j = 741/n};
-    position_t t = {.i = 2635/n, .j = 2420/n};
-    queue_t* solution = solve_dijkstra(image_thickened, s, t);
-    colored_pixel_t pixel = {.r = 0, .g = 0, .b = 0};
-    draw_solution(colored_image, solution, pixel, n);
-
-    colored_image_free(colored_image);
-    */
-
     image_free(canny_image);
     image_free(image_thickened);
 
