@@ -5,15 +5,7 @@
 #include "queue.h"
 #include "priority_queue.h"
 
-// Définition des types
 
-// Structure représentant une position dans l'image
-typedef struct position_s {
-    int i; // Ligne
-    int j; // Colonne
-} position_t;
-
-// Prototypes des fonctions
 
 // Crée un noyau gaussien
 kernel_t create_gaussian_kernel(int size, double sigma);

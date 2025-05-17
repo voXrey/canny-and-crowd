@@ -9,6 +9,7 @@
 #include "queue.h"
 #include "priority_queue.h"
 #include "logging.h"
+#include "common.h"
 
 
 // Créer un noyau gaussien de taille size et d'écart-type sigma

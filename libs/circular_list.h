@@ -1,6 +1,8 @@
 #ifndef CIRCULAR_LIST_H
 #define CIRCULAR_LIST_H
 
+#include <stdbool.h>
+
 struct circular_list_node_s {
     struct circular_list_node_s* next;
     struct circular_list_node_s* prev;

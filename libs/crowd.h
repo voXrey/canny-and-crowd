@@ -5,6 +5,7 @@
 #include "image.h"
 #include "image_usage.h"
 #include "circular_list.h"
+#include "common.h"
 
 struct environment_s {
     int rows;
@@ -13,14 +14,6 @@ struct environment_s {
     int max;
 };
 typedef struct environment_s environment_t;
-
-struct movement_s {
-    position_t start;
-    position_t target;
-    int agents;
-};
-typedef struct movement_s movement_t;
-
 
 // Créer un environnement à partir d'une image
 environment_t env_from_image(image_t image);

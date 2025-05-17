@@ -12,13 +12,15 @@
 #include "config.h"
 #include "crowd.h"
 #include "circular_list.h"
+#include "common.h"
+#include "csv.h"
 
 int main(int argc, char** argv) {
     // Chargement de la configuration
     config_load("config.conf");
 
-    if (argc != 2) log_fatal("Usage : %s <image>", argv[0]);
-
+    if (argc != 3) log_fatal("Usage : %s <image> <movements-file>", argv[0]);
+    const char* movements_file_path = argv[2];
 
     colored_image_t colored_image = image_read(argv[1]);    
     
@@ -52,10 +54,7 @@ int main(int argc, char** argv) {
     position_t t1 = {.i = 2635/n, .j = 2420/n};
     movement_t m1 = {.start = s1, .target = t1, .agents = 100};
 
-    position_t s2 = {.i = 2700/n, .j = 700/n};
-    position_t t2 = {.i = 1600/n, .j = 2400/n};
-    movement_t m2 = {.start = s2, .target = t2, .agents = 100};
-
+    circular_list_node_t* movements = load_movements(movements_file_path);
 
     move_env_a_star(m1, &env);
     

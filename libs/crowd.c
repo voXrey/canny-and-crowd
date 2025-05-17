@@ -7,6 +7,7 @@
 #include "image_usage.h"
 #include "circular_list.h"
 #include "logging.h"
+#include "common.h"
 
 // Créer un environnement à partir d'une image
 environment_t env_from_image(image_t image) {
