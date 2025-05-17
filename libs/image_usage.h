@@ -4,7 +4,7 @@
 #include "image.h"
 #include "queue.h"
 #include "priority_queue.h"
-
+#include "common.h"
 
 
 // Crée un noyau gaussien

@@ -1,6 +1,12 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+
+typedef struct position_s {
+    int i;
+    int j;
+} position_t;
+
 struct movement_s {
     position_t start;
     position_t target;
@@ -8,11 +14,6 @@ struct movement_s {
 };
 typedef struct movement_s movement_t;
 
-
-typedef struct position_s {
-    int i;
-    int j;
-} position_t;
 
 
 #endif
