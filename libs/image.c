@@ -215,6 +215,7 @@ void colored_image_show(colored_image_t image) {
 
     cv::Mat img = cvmat_from_colored_image(image);
     cv::namedWindow(image.name, cv::WINDOW_NORMAL);
+    cv::resizeWindow(image.name, 600, 600);
     cv::imshow(image.name, img);
 
     log_debug("Image colorée affichée (en attente d'action) : %s", image.name);
@@ -230,8 +231,9 @@ void image_show(image_t image) {
     cv::Mat mat = cvmat_from_image(image);
 
     // Afficher l'image avec OpenCV
-    cv::namedWindow(image.name ? image.name : "Image en niveaux de gris", cv::WINDOW_NORMAL);
-    cv::imshow(image.name ? image.name : "Image en niveaux de gris", mat);
+    cv::namedWindow(image.name, cv::WINDOW_NORMAL);
+    cv::resizeWindow(image.name, 600, 600);
+    cv::imshow(image.name, mat);
     log_debug("Image en niveaux de gris affichée (en attente d'action): %s", image.name);
     cv::waitKey(0); // Se ferme après un appui sur une touche
     log_debug("Fermeture de l'image en niveaux de gris : %s", image.name);
