@@ -398,7 +398,7 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
 
         while (!pq_is_empty(pq)) {
             position_t* u = (position_t*) pq_pop(pq);
-            if (iteration > 0 && u->i == target.i && u->j == target.j) break;
+            if (iteration != 0 && u->i == target.i && u->j == target.j) break;
 
             for (int d = 0; d < 4; d++) {
                 int ni = u->i + directions[d][0];

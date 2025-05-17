@@ -15,13 +15,6 @@ struct environment_s {
 };
 typedef struct environment_s environment_t;
 
-// Structure permettant de faire la transition entre le tableau des distances et celui des heuristiques
-struct distance_cell_s {
-    double current;
-    int iteration;
-};
-typedef struct distance_cell_s distance_cell_t;
-
 // Créer un environnement à partir d'une image
 environment_t env_from_image(image_t image);
 
