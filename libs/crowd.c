@@ -44,7 +44,7 @@ void env_free(environment_t env) {
 }
 
 // Faire parcourir un environnement par un agent
-void env_move_agent(environment_t* env, position_t start, position_t target) {
+void env_move_agent(environment_t* env, position_t start, position_t target, int weight) {
     log_debug("Déplacement d'un agent dans un environnement : %d,%d -> %d,%d", start.i, start.j, target.i, target.j);
 
     // Initialiser les tableaux
@@ -96,7 +96,7 @@ void env_move_agent(environment_t* env, position_t start, position_t target) {
 
             if (ni >= 0 && ni < env->rows && nj >= 0 && nj < env->cols
                     && !visited[ni][nj] && env->agents[ni][nj] != -1) {
-                double new_dist = dis[p->i][p->j] + env->agents[ni][nj] + 20;
+                double new_dist = dis[p->i][p->j] + env->agents[ni][nj] + weight;
                 if (new_dist < dis[ni][nj]) {
                     dis[ni][nj] = new_dist;
                     pred[ni][nj] = *p;
@@ -141,18 +141,15 @@ void env_move_agent(environment_t* env, position_t start, position_t target) {
 }
 
 // Faire parcourir un environnement par plusieurs agents
-void env_move(environment_t* env, circular_list_t* movements) {
+void env_move(environment_t* env, circular_list_t* movements, int weight) {
     log_debug("Déplacement des agents dans un environnement");
 
     while (!cl_is_empty(movements)) {
         movement_t* m = (movement_t*) cl_get(movements);
-        if (m->agents == 0) {
-            cl_remove(movements);
-            continue;
+        for (int i = 0; i < m->agents; i++) {
+            env_move_agent(env, m->start, m->target, weight);
         }
-        env_move_agent(env, m->start, m->target);
-        m->agents--;
-        cl_next(movements);
+        cl_remove(movements);
     }
     log_debug("Déplacement des agents terminé");
 }
@@ -215,9 +212,9 @@ int manhattan_distance(position_t a, position_t b) {
     return abs(a.i - b.i) + abs(a.j - b.j);
 }
 
-// Parcourir un environnement avec un A* itératif
+// Parcourir un environnement avec un A* simple
 void move_env_a_star(movement_t movement, environment_t* env, int weight) {
-    log_debug("Déplacement d'agents dans un environnement avec A* itératif");
+    log_debug("Déplacement de %d agents dans un environnement avec A* simple", movement.agents);
     position_t start = movement.start;
     position_t target = movement.target;
     int agents = movement.agents;
@@ -249,7 +246,6 @@ void move_env_a_star(movement_t movement, environment_t* env, int weight) {
 
     // Créer une file de priorité
     priority_queue_t* pq = pq_create(env->rows * env->cols);
-    
     
     // Boucle principale
     int iteration = 0;
@@ -330,23 +326,154 @@ void move_env_a_star(movement_t movement, environment_t* env, int weight) {
 
     pq_free(pq);
 
-    log_debug("Déplacement d'agents dans un environnement avec A* itératif terminé");
+    log_debug("Déplacement des %d agents dans un environnement avec A* itératif terminé", movement.agents);
 }
 
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
 void multiple_move_env_a_star(circular_list_t* movements, environment_t* env, int weight) {
     log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif");
-    int i = 0;
     int n = movements->size;
     while (!cl_is_empty(movements)) {
         movement_t* m = (movement_t*) cl_get(movements);
-        log_debug("(%d/%d) Déplacement de %d agents de (%d, %d) vers (%d, %d)", i, n, m->agents, m->start.i, m->start.j, m->target.i, m->target.j);
         move_env_a_star(*m, env, weight);
-        i++;
-        log_debug("(%d/%d) Déplacement terminé", i, n);
         free(m);
         cl_remove(movements);
     }
+    log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif terminé");
+}
 
+// Parcourir un environnement avec un A* itératif
+void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight) {
+    log_debug("Déplacement de %d agents dans un environnement avec A* itératif", movement.agents);
+    position_t start = movement.start;
+    position_t target = movement.target;
+    int agents = movement.agents;
+
+    // Initialiser les tableaux
+    position_t** pred = (position_t**) malloc(sizeof(position_t*) * env->rows);
+    distance_cell_t** dis = (distance_cell_t**) malloc(sizeof(distance_cell_t*) * env->rows);
+    double** heuristique = (double**) malloc(sizeof(double*) * env->rows);
+    int** visited = (int**) malloc(sizeof(int*) * env->rows);
+    position_t*** ptrs = (position_t***) malloc(sizeof(position_t**) * env->rows);
+    for (int i = 0; i < env->rows; i++) {
+        pred[i] = (position_t*) malloc(sizeof(position_t) * env->cols);
+        heuristique[i] = (double*) malloc(sizeof(double) * env->cols);
+        dis[i] = (distance_cell_t*) malloc(sizeof(distance_cell_t) * env->cols);
+        visited[i] = (int*) malloc(sizeof(int*) * env->cols);
+        ptrs[i] = (position_t**) malloc(sizeof(position_t*) * env->cols);
+        for (int j = 0; j < env->cols; j++) {
+            position_t pos = {.i = i, .j = j};
+            pred[i][j] = (position_t) {.i = -1, .j = -1};
+            heuristique[i][j] = manhattan_distance(pos, target);
+            dis[i][j] = (distance_cell_t) {.current = heuristique[i][j], .iteration = -1};
+            visited[i][j] = -1;
+            ptrs[i][j] = (position_t*) malloc(sizeof(position_t));
+            ptrs[i][j]->i = i;
+            ptrs[i][j]->j = j;
+        }
+    }
+    dis[start.i][start.j] = (distance_cell_t) {.current = 0, .iteration = 0};
+    visited[start.i][start.j] = 0;
+
+    // Créer une file de priorité
+    priority_queue_t* pq = pq_create(env->rows * env->cols);
+    
+    
+    // Boucle principale
+    int iteration = 0;
+    while (agents > 0) {
+        position_t* s = ptrs[start.i][start.j];
+        pq_push(pq, 0, (void*) s);
+
+        // Directions possibles
+        int directions[4][2] = {
+            {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
+        };
+
+        while (!pq_is_empty(pq)) {
+            position_t* u = (position_t*) pq_pop(pq);
+            if (u->i == target.i && u->j == target.j) break;
+
+            for (int d = 0; d < 4; d++) {
+                int ni = u->i + directions[d][0];
+                int nj = u->j + directions[d][1];
+
+                if (ni >= 0 && ni < env->rows && nj >= 0 && nj < env->cols
+                        && visited[ni][nj] < iteration && env->agents[ni][nj] != -1) {
+                    
+                    double dis_n = (visited[ni][nj] == iteration) ? dis[ni][nj].current : INFINITY;
+                    double new_dist = dis[u->i][u->j].current + env->agents[ni][nj] + weight;
+
+                    if (new_dist < dis_n) {
+                        if (dis[ni][nj].iteration != iteration) {
+                            dis[ni][nj].iteration = iteration;
+                            heuristique[ni][nj] = dis[ni][nj].current;
+                        }
+                        dis[ni][nj].current = new_dist;
+                        pred[ni][nj] = *u;
+
+                        position_t* pos = ptrs[ni][nj];
+                        
+                        visited[ni][nj] = iteration;
+
+                        int total_cost = new_dist + heuristique[ni][nj];
+
+                        pq_push(pq, total_cost, (void*) pos);
+                    }
+                }
+            }
+            visited[u->i][u->j] = iteration;
+        }
+        while (!pq_is_empty(pq)) {
+            position_t* p = (position_t*) pq_pop(pq);
+        }
+
+        // Agir sur l'environnement
+        position_t current = target;
+        while (pred[current.i][current.j].i != -1) {
+            env->agents[current.i][current.j]++;
+            if (env->agents[current.i][current.j] > env->max) {
+                env->max = env->agents[current.i][current.j];
+            }
+            current = pred[current.i][current.j];
+        }
+        env->agents[start.i][start.j]++;
+
+        iteration++;
+        agents--;
+    }
+
+    // Libérer les ressources
+    for (int i = 0; i < env->rows; i++) {
+        free(pred[i]);
+        free(dis[i]);
+        free(heuristique[i]);
+        free(visited[i]);
+        for (int j = 0; j < env->cols; j++) {
+            free(ptrs[i][j]);
+        }
+        free(ptrs[i]);
+    }
+    free(ptrs);
+    free(pred);
+    free(dis);
+    free(heuristique);
+    free(visited);
+
+    pq_free(pq);
+
+    log_debug("Déplacement des %d agents dans un environnement avec A* itératif terminé", movement.agents);
+}
+
+// Appliquer plusieurs mouvements à un environnement avec A* itératif
+void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight) {
+    log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif");
+    int n = movements->size;
+    while (!cl_is_empty(movements)) {
+        movement_t* m = (movement_t*) cl_get(movements);
+        move_env_iterative_a_star(*m, env, weight);
+        free(m);
+        cl_remove(movements);
+    }
     log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif terminé");
 }

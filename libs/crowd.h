@@ -15,6 +15,13 @@ struct environment_s {
 };
 typedef struct environment_s environment_t;
 
+// Structure permettant de faire la transition entre le tableau des distances et celui des heuristiques
+struct distance_cell_s {
+    double current;
+    int iteration;
+};
+typedef struct distance_cell_s distance_cell_t;
+
 // Créer un environnement à partir d'une image
 environment_t env_from_image(image_t image);
 
@@ -22,10 +29,10 @@ environment_t env_from_image(image_t image);
 void env_free(environment_t env);
 
 // Faire parcourir un environnement par un agent
-void env_move_agent(environment_t* env, position_t start, position_t target);
+void env_move_agent(environment_t* env, position_t start, position_t target, int weight);
 
 // Faire parcourir un environnement par plusieurs agents
-void env_move(environment_t* env, circular_list_t movements);
+void env_move(environment_t* env, circular_list_t movements, int weight);
 
 // Modifier une image en fonction de l'environnement
 void env_image_edit(image_t image, environment_t env, int n);
@@ -33,10 +40,16 @@ void env_image_edit(image_t image, environment_t env, int n);
 // Modifier une image colorée en fonction de l'environnement
 void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 
-// Parcourir un environnement avec un A* itératif
+// Parcourir un environnement avec un A* simple
 void move_env_a_star(movement_t movement, environment_t* env, int weight);
 
-// Appliquer plusieurs mouvements à un environnement avec A* itératif
+// Appliquer plusieurs mouvements à un environnement avec A* simple
 void multiple_move_env_a_star(circular_list_t* movements, environment_t* env, int weight);
+
+// Parcourir un environnement avec un A* itératif
+void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight);
+
+// Appliquer plusieurs mouvements à un environnement avec A* itératif
+void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight);
 
 #endif

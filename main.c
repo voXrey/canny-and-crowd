@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "priority_queue.h"
 #include "queue.h"
@@ -18,6 +19,8 @@
 int main(int argc, char** argv) {
     // Chargement de la configuration
     config_load("config.conf");
+    clock_t start, end;
+    double cpu_time_used;
 
     if (argc < 4 || 5 < argc) log_fatal("Usage : %s <image> <movements-file> <weight> [compression]", argv[0]);
     const char* movements_file_path = argv[2];
@@ -44,7 +47,19 @@ int main(int argc, char** argv) {
     environment_t env = env_from_image(image_thickened);
 
     circular_list_t* movements = load_movements(movements_file_path, n);
+    start = clock();
+    multiple_move_env_iterative_a_star(movements, &env, weight);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* itératif : %f secondes", cpu_time_used);
+    free_movements(movements);
+
+    movements = load_movements(movements_file_path, n);
+    start = clock();
     multiple_move_env_a_star(movements, &env, weight);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* simple : %f secondes", cpu_time_used);
     free_movements(movements);
     
     env_image_colored_edit(colored_image, env, n);
