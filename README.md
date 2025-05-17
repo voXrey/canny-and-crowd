@@ -6,7 +6,7 @@
 - opencv
 - g++
 
-### Compilation
+### Compilation
 Pour compiler le projet
 > `make`
 Pour nettoyer tout ce qu'a produit la compilation
