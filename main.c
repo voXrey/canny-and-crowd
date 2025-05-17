@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
     circular_list_t* movements = load_movements(movements_file_path);
 
-    move_env_a_star(m1, &env);
+    multiple_move_env_a_star(movements, &env);
     
     env_image_colored_edit(colored_image, env, n);
     colored_image_show(colored_image);

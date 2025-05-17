@@ -23,7 +23,7 @@ circular_list_t* load_movements(const char* filename) {
         int agents;
 
         if (sscanf(line, "%d:%d,%d:%d,%d", &start.i, &start.j, &target.i, &target.j, &agents) == 5) {
-            movement_t* m = malloc(sizeof(movement_t));
+            movement_t* m = (movement_t*) (sizeof(movement_t));
             cl_add(cl, (void*) m);
         }
     }
@@ -33,12 +33,12 @@ circular_list_t* load_movements(const char* filename) {
 }
 
 void free_movements(circular_list_t* cl) {
-    if (circular_list_is_empty(cl)) {
+    if (cl_is_empty(cl)) {
         cl_free(cl);
         return;
     }
-    movement_t* m = (movement_t*) circular_list_get(cl);
+    movement_t* m = (movement_t*) cl_get(cl);
     free(m);
-    circular_list_remove(cl);
+    cl_remove(cl);
     free_movements(cl);
 }

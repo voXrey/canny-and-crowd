@@ -36,4 +36,7 @@ void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 // Parcourir un environnement avec un A* itératif
 void move_env_a_star(movement_t movement, environment_t* env);
 
+// Appliquer plusieurs mouvements à un environnement avec A* itératif
+void multiple_move_env_a_star(circular_list_t* movements, environment_t* env);
+
 #endif
