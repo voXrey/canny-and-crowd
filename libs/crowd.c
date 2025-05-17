@@ -246,17 +246,17 @@ void move_env_a_star(movement_t movement, environment_t* env, int weight) {
 
     // Créer une file de priorité
     priority_queue_t* pq = pq_create(env->rows * env->cols);
-    
+
+    // Directions possibles
+    int directions[4][2] = {
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
+    };
+
     // Boucle principale
     int iteration = 0;
     while (agents > 0) {
         position_t* s = ptrs[start.i][start.j];
         pq_push(pq, 0, (void*) s);
-
-        // Directions possibles
-        int directions[4][2] = {
-            {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
-        };
 
         while (!pq_is_empty(pq)) {
             position_t* u = (position_t*) pq_pop(pq);
@@ -351,48 +351,54 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
 
     // Initialiser les tableaux
     position_t** pred = (position_t**) malloc(sizeof(position_t*) * env->rows);
-    distance_cell_t** dis = (distance_cell_t**) malloc(sizeof(distance_cell_t*) * env->rows);
+    double** dis = (double**) malloc(sizeof(double*) * env->rows);
     double** heuristique = (double**) malloc(sizeof(double*) * env->rows);
     int** visited = (int**) malloc(sizeof(int*) * env->rows);
     position_t*** ptrs = (position_t***) malloc(sizeof(position_t**) * env->rows);
     for (int i = 0; i < env->rows; i++) {
         pred[i] = (position_t*) malloc(sizeof(position_t) * env->cols);
         heuristique[i] = (double*) malloc(sizeof(double) * env->cols);
-        dis[i] = (distance_cell_t*) malloc(sizeof(distance_cell_t) * env->cols);
+        dis[i] = (double*) malloc(sizeof(double) * env->cols);
         visited[i] = (int*) malloc(sizeof(int*) * env->cols);
         ptrs[i] = (position_t**) malloc(sizeof(position_t*) * env->cols);
         for (int j = 0; j < env->cols; j++) {
             position_t pos = {.i = i, .j = j};
             pred[i][j] = (position_t) {.i = -1, .j = -1};
-            heuristique[i][j] = manhattan_distance(pos, target);
-            dis[i][j] = (distance_cell_t) {.current = heuristique[i][j], .iteration = -1};
+            heuristique[i][j] = 0;
             visited[i][j] = -1;
             ptrs[i][j] = (position_t*) malloc(sizeof(position_t));
             ptrs[i][j]->i = i;
             ptrs[i][j]->j = j;
         }
     }
-    dis[start.i][start.j] = (distance_cell_t) {.current = 0, .iteration = 0};
-    visited[start.i][start.j] = 0;
 
     // Créer une file de priorité
     priority_queue_t* pq = pq_create(env->rows * env->cols);
     
-    
+    // Directions possibles
+    int directions[4][2] = {
+        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
+    };
+
     // Boucle principale
+    position_t* s;
     int iteration = 0;
     while (agents > 0) {
-        position_t* s = ptrs[start.i][start.j];
+        if (iteration > 0) {
+            dis[start.i][start.j] = 0.;
+            visited[start.i][start.j] = 0;
+            s = ptrs[start.i][start.j];
+        }
+        else {
+            dis[target.i][target.j] = 0.;
+            visited[target.i][target.j] = 0;
+            s = ptrs[target.i][target.j];
+        }
         pq_push(pq, 0, (void*) s);
-
-        // Directions possibles
-        int directions[4][2] = {
-            {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
-        };
 
         while (!pq_is_empty(pq)) {
             position_t* u = (position_t*) pq_pop(pq);
-            if (u->i == target.i && u->j == target.j) break;
+            if (iteration > 0 && u->i == target.i && u->j == target.j) break;
 
             for (int d = 0; d < 4; d++) {
                 int ni = u->i + directions[d][0];
@@ -401,15 +407,11 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
                 if (ni >= 0 && ni < env->rows && nj >= 0 && nj < env->cols
                         && visited[ni][nj] < iteration && env->agents[ni][nj] != -1) {
                     
-                    double dis_n = (visited[ni][nj] == iteration) ? dis[ni][nj].current : INFINITY;
-                    double new_dist = dis[u->i][u->j].current + env->agents[ni][nj] + weight;
+                    double dis_n = (visited[ni][nj] == iteration) ? dis[ni][nj] : INFINITY;
+                    double new_dist = dis[u->i][u->j] + (env->agents[ni][nj] + weight);
 
                     if (new_dist < dis_n) {
-                        if (dis[ni][nj].iteration != iteration) {
-                            dis[ni][nj].iteration = iteration;
-                            heuristique[ni][nj] = dis[ni][nj].current;
-                        }
-                        dis[ni][nj].current = new_dist;
+                        dis[ni][nj] = new_dist;
                         pred[ni][nj] = *u;
 
                         position_t* pos = ptrs[ni][nj];
@@ -425,19 +427,29 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
             visited[u->i][u->j] = iteration;
         }
         while (!pq_is_empty(pq)) {
-            position_t* p = (position_t*) pq_pop(pq);
+            s = (position_t*) pq_pop(pq);
         }
 
         // Agir sur l'environnement
-        position_t current = target;
-        while (pred[current.i][current.j].i != -1) {
+        position_t current = (iteration > 0) ? target : start;
+        position_t stop = (iteration > 0) ? start : target;
+        while (pred[current.i][current.j].i != stop.i || pred[current.i][current.j].j != stop.j) {
             env->agents[current.i][current.j]++;
+            heuristique[current.i][current.j] = dis[target.i][target.j] - dis[current.i][current.j];
             if (env->agents[current.i][current.j] > env->max) {
                 env->max = env->agents[current.i][current.j];
             }
             current = pred[current.i][current.j];
         }
-        env->agents[start.i][start.j]++;
+        if (iteration > 0) env->agents[start.i][start.j]++;
+        else env->agents[target.i][target.j]++;
+
+        // Si c'est la première itération, on échange l'heuristique et le tableau des distances
+        if (iteration == 0) {
+            double** temps = heuristique;
+            heuristique = dis;
+            dis = temps;
+        }
 
         iteration++;
         agents--;
