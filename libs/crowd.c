@@ -336,10 +336,14 @@ void move_env_a_star(movement_t movement, environment_t* env) {
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
 void multiple_move_env_a_star(circular_list_t* movements, environment_t* env) {
     log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif");
-
+    int i = 1;
+    int n = movements->size;
     while (!cl_is_empty(movements)) {
         movement_t* m = (movement_t*) cl_get(movements);
+        log_debug("(%d/%d) Déplacement de %d agents de (%d, %d) vers (%d, %d)", i, n, m->agents, m->start.i, m->start.j, m->target.i, m->target.j);
         move_env_a_star(*m, env);
+        log_debug("(%d/%d) Déplacement terminé", i, n);
+        i++;
         free(m);
         cl_remove(movements);
     }

@@ -5,7 +5,7 @@
 #include "common.h"
 #include "circular_list.h"
 
-circular_list_t* load_movements(const char* filename) {
+circular_list_t* load_movements(const char* filename, int n) {
     FILE* file = fopen(filename, "r");
     if (!file) return NULL;
 
@@ -23,7 +23,15 @@ circular_list_t* load_movements(const char* filename) {
         int agents;
 
         if (sscanf(line, "%d:%d,%d:%d,%d", &start.i, &start.j, &target.i, &target.j, &agents) == 5) {
-            movement_t* m = (movement_t*) (sizeof(movement_t));
+            start.i /= n;
+            start.j /= n;
+            target.i /= n;
+            target.j /= n;
+            
+            movement_t* m = (movement_t*) malloc(sizeof(movement_t));
+            m->start = start;
+            m->target = target;
+            m->agents = agents;
             cl_add(cl, (void*) m);
         }
     }
