@@ -51,4 +51,10 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
 void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight);
 
+// Parcourir un environnement avec un A* itératif "modulo" (on met totalement à jour l'heuristique de temps en temps)
+void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, int weight, int modulo);
+
+// Appliquer plusieurs mouvements à un environnement avec A* itératif modulo
+void multiple_move_env_iterative_a_star_modulo(circular_list_t* movements, environment_t* env, int weight, int modulo);
+
 #endif

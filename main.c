@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     log_info("A* itératif : %f secondes", cpu_time_used);
     free_movements(movements);
 
+    env = env_from_image(image_thickened);
     movements = load_movements(movements_file_path, n);
     start = clock();
     multiple_move_env_iterative_a_star_dijkstra(movements, &env, weight);
@@ -62,6 +63,43 @@ int main(int argc, char** argv) {
     log_info("A* Dijkstra : %f secondes", cpu_time_used);
     free_movements(movements);
 
+    env = env_from_image(image_thickened);
+    movements = load_movements(movements_file_path, n);
+    start = clock();
+    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 20);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* modulo 20 : %f secondes", cpu_time_used);
+    free_movements(movements);
+
+    env = env_from_image(image_thickened);
+    movements = load_movements(movements_file_path, n);
+    start = clock();
+    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 50);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* modulo 50 : %f secondes", cpu_time_used);
+    free_movements(movements);
+
+    env = env_from_image(image_thickened);
+    movements = load_movements(movements_file_path, n);
+    start = clock();
+    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 100);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* modulo 100 : %f secondes", cpu_time_used);
+    free_movements(movements);
+
+    env = env_from_image(image_thickened);
+    movements = load_movements(movements_file_path, n);
+    start = clock();
+    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 500);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* modulo 500 : %f secondes", cpu_time_used);
+    free_movements(movements);
+
+    env = env_from_image(image_thickened);
     movements = load_movements(movements_file_path, n);
     start = clock();
     multiple_move_env_a_star(movements, &env, weight);
