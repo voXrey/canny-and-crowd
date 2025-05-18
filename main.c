@@ -56,11 +56,20 @@ int main(int argc, char** argv) {
 
     movements = load_movements(movements_file_path, n);
     start = clock();
+    multiple_move_env_iterative_a_star_dijkstra(movements, &env, weight);
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    log_info("A* Dijkstra : %f secondes", cpu_time_used);
+    free_movements(movements);
+
+    movements = load_movements(movements_file_path, n);
+    start = clock();
     multiple_move_env_a_star(movements, &env, weight);
     end = clock();
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* simple : %f secondes", cpu_time_used);
+    log_info("A* norme 1 : %f secondes", cpu_time_used);
     free_movements(movements);
+    
     
     env_image_colored_edit(colored_image, env, n);
     colored_image_show(colored_image);

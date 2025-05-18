@@ -33,11 +33,17 @@ void env_image_edit(image_t image, environment_t env, int n);
 // Modifier une image colorée en fonction de l'environnement
 void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 
-// Parcourir un environnement avec un A* simple
+// Parcourir un environnement avec un A* simple (norme 1)
 void move_env_a_star(movement_t movement, environment_t* env, int weight);
 
-// Appliquer plusieurs mouvements à un environnement avec A* simple
+// Appliquer plusieurs mouvements à un environnement avec A* simple (norme 1)
 void multiple_move_env_a_star(circular_list_t* movements, environment_t* env, int weight);
+
+// Parcourir un environnement avec un A* simple (Dijkstra pour heuristique)
+void move_env_iterative_a_star_dijkstra(movement_t movement, environment_t* env, int weight);
+
+// Appliquer plusieurs mouvements à un environnement avec A* simple (Dijkstra pour heuristique)
+void multiple_move_env_iterative_a_star_dijkstra(circular_list_t* movements, environment_t* env, int weight);
 
 // Parcourir un environnement avec un A* itératif
 void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight);
