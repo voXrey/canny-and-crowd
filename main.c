@@ -47,9 +47,9 @@ int main(int argc, char** argv) {
     environment_t env;
     circular_list_t* movements;
 
-    int tests = 3;
+    int tests = 10;
 
-    for (int i = 1; i < 10; i += 1) {
+    for (int i = 1; i < 2001; i += 1) {
         for (int j = 0; j < tests; j++) {
             env = env_from_image(image_thickened);
             movements = load_movements(movements_file_path, n);
@@ -57,9 +57,9 @@ int main(int argc, char** argv) {
             multiple_move_env_iterative_a_star_modulo(movements, &env, weight, i);
             end = clock();
             cpu_time_used = ((double) (end-start)) / CLOCKS_PER_SEC;
-            log_info("A* modulo %d : %f secondes", i, cpu_time_used);
+            log_info("A* modulo %d : %.3f secondes", i, cpu_time_used);
             free_movements(movements);
-            printf("%d,%f\n", i, cpu_time_used);
+            write_result("results_laby3.csv", i, (end-start), cpu_time_used);
         }
     }
 

@@ -50,3 +50,12 @@ void free_movements(circular_list_t* cl) {
     cl_remove(cl);
     free_movements(cl);
 }
+
+// Écrire le résultat en performance d'une exécution de parcours dans un fichier CSV
+void write_result(const char filename, int modulo, int clocks, double time) {
+    fopen(filename, "a");
+    FILE* file = fopen(filename, "a");
+    if (!file) return;
+    fprintf(file, "%d;%d;%ld\n", modulo, clocks, time);
+    fclose(file);
+}

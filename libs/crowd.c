@@ -329,7 +329,7 @@ void move_env_a_star(movement_t movement, environment_t* env, int weight) {
     log_debug("Déplacement des %d agents dans un environnement avec A* itératif terminé", movement.agents);
 }
 
-// Appliquer plusieurs mouvements à un environnement avec A* itératif
+// Appliquer plusieurs mouvements à un environnement avec A* (norme 1)
 void multiple_move_env_a_star(circular_list_t* movements, environment_t* env, int weight) {
     log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif");
     int n = movements->size;
@@ -489,155 +489,6 @@ void multiple_move_env_iterative_a_star_dijkstra(circular_list_t* movements, env
     log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif terminé");
 }
 
-// Parcourir un environnement avec un A* itératif
-void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight) {
-    log_debug("Déplacement de %d agents dans un environnement avec A* itératif", movement.agents);
-    position_t start = movement.start;
-    position_t target = movement.target;
-    int agents = movement.agents;
-
-    // Initialiser les tableaux
-    position_t** pred = (position_t**) malloc(sizeof(position_t*) * env->rows);
-    double** dis = (double**) malloc(sizeof(double*) * env->rows);
-    double** heuristique = (double**) malloc(sizeof(double*) * env->rows);
-    int** visited = (int**) malloc(sizeof(int*) * env->rows);
-    position_t*** ptrs = (position_t***) malloc(sizeof(position_t**) * env->rows);
-    for (int i = 0; i < env->rows; i++) {
-        pred[i] = (position_t*) malloc(sizeof(position_t) * env->cols);
-        heuristique[i] = (double*) malloc(sizeof(double) * env->cols);
-        dis[i] = (double*) malloc(sizeof(double) * env->cols);
-        visited[i] = (int*) malloc(sizeof(int*) * env->cols);
-        ptrs[i] = (position_t**) malloc(sizeof(position_t*) * env->cols);
-        for (int j = 0; j < env->cols; j++) {
-            position_t pos = {.i = i, .j = j};
-            pred[i][j] = (position_t) {.i = -1, .j = -1};
-            heuristique[i][j] = 0;
-            visited[i][j] = -1;
-            ptrs[i][j] = (position_t*) malloc(sizeof(position_t));
-            ptrs[i][j]->i = i;
-            ptrs[i][j]->j = j;
-        }
-    }
-
-    // Créer une file de priorité
-    priority_queue_t* pq = pq_create(env->rows * env->cols);
-    
-    // Directions possibles
-    int directions[4][2] = {
-        {-1, 0}, {1, 0}, {0, -1}, {0, 1}, // Haut, Bas, Gauche, Droite
-    };
-
-    // Boucle principale
-    position_t* s;
-    int iteration = 0;
-    while (agents > 0) {
-        if (iteration > 0) {
-            dis[start.i][start.j] = 0.;
-            visited[start.i][start.j] = 0;
-            s = ptrs[start.i][start.j];
-        }
-        else {
-            dis[target.i][target.j] = 0.;
-            visited[target.i][target.j] = 0;
-            s = ptrs[target.i][target.j];
-        }
-        pq_push(pq, 0, (void*) s);
-
-        while (!pq_is_empty(pq)) {
-            position_t* u = (position_t*) pq_pop(pq);
-            if (iteration != 0 && u->i == target.i && u->j == target.j) break;
-
-            for (int d = 0; d < 4; d++) {
-                int ni = u->i + directions[d][0];
-                int nj = u->j + directions[d][1];
-
-                if (ni >= 0 && ni < env->rows && nj >= 0 && nj < env->cols
-                        && visited[ni][nj] < iteration && env->agents[ni][nj] != -1) {
-                    
-                    double dis_n = (visited[ni][nj] == iteration) ? dis[ni][nj] : INFINITY;
-                    double new_dist = dis[u->i][u->j] + (env->agents[ni][nj] + weight);
-
-                    if (new_dist < dis_n) {
-                        dis[ni][nj] = new_dist;
-                        pred[ni][nj] = *u;
-
-                        position_t* pos = ptrs[ni][nj];
-                        
-                        visited[ni][nj] = iteration;
-
-                        int total_cost = new_dist + heuristique[ni][nj];
-
-                        pq_push(pq, total_cost, (void*) pos);
-                    }
-                }
-            }
-            visited[u->i][u->j] = iteration;
-        }
-        while (!pq_is_empty(pq)) {
-            s = (position_t*) pq_pop(pq);
-        }
-
-        // Agir sur l'environnement
-        position_t current = (iteration > 0) ? target : start;
-        position_t stop = (iteration > 0) ? start : target;
-        while (pred[current.i][current.j].i != stop.i || pred[current.i][current.j].j != stop.j) {
-            env->agents[current.i][current.j]++;
-            heuristique[current.i][current.j] = dis[target.i][target.j] - dis[current.i][current.j];
-            if (env->agents[current.i][current.j] > env->max) {
-                env->max = env->agents[current.i][current.j];
-            }
-            current = pred[current.i][current.j];
-        }
-        if (iteration > 0) env->agents[start.i][start.j]++;
-        else env->agents[target.i][target.j]++;
-
-        // Si c'est la première itération, on échange l'heuristique et le tableau des distances
-        if (iteration == 0) {
-            double** temps = heuristique;
-            heuristique = dis;
-            dis = temps;
-        }
-
-        iteration++;
-        agents--;
-    }
-
-    // Libérer les ressources
-    for (int i = 0; i < env->rows; i++) {
-        free(pred[i]);
-        free(dis[i]);
-        free(heuristique[i]);
-        free(visited[i]);
-        for (int j = 0; j < env->cols; j++) {
-            free(ptrs[i][j]);
-        }
-        free(ptrs[i]);
-    }
-    free(ptrs);
-    free(pred);
-    free(dis);
-    free(heuristique);
-    free(visited);
-
-    pq_free(pq);
-
-    log_debug("Déplacement des %d agents dans un environnement avec A* itératif terminé", movement.agents);
-}
-
-// Appliquer plusieurs mouvements à un environnement avec A* itératif
-void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight) {
-    log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif");
-    int n = movements->size;
-    while (!cl_is_empty(movements)) {
-        movement_t* m = (movement_t*) cl_get(movements);
-        move_env_iterative_a_star(*m, env, weight);
-        free(m);
-        cl_remove(movements);
-    }
-    log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif terminé");
-}
-
-
 // Parcourir un environnement avec un A* itératif "modulo" (on met totalement à jour l'heuristique de temps en temps)
 void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, int weight, int modulo) {
     log_debug("Déplacement de %d agents dans un environnement avec A* itératif", movement.agents);
@@ -679,8 +530,9 @@ void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, i
     // Boucle principale
     position_t* s;
     int iteration = 0;
+    int modulo_count = 0;
     while (agents > 0) {
-        if (iteration % modulo != 0) {
+        if (modulo_count != 0) {
             dis[start.i][start.j] = 0.;
             visited[start.i][start.j] = 0;
             s = ptrs[start.i][start.j];
@@ -694,7 +546,7 @@ void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, i
 
         while (!pq_is_empty(pq)) {
             position_t* u = (position_t*) pq_pop(pq);
-            if (iteration % modulo != 0 && u->i == target.i && u->j == target.j) break;
+            if (modulo_count != 0 && u->i == target.i && u->j == target.j) break;
 
             for (int d = 0; d < 4; d++) {
                 int ni = u->i + directions[d][0];
@@ -727,8 +579,8 @@ void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, i
         }
 
         // Agir sur l'environnement
-        position_t current = (iteration % modulo != 0) ? target : start;
-        position_t stop = (iteration % modulo != 0) ? start : target;
+        position_t current = (modulo_count != 0) ? target : start;
+        position_t stop = (modulo_count != 0) ? start : target;
         while (pred[current.i][current.j].i != stop.i || pred[current.i][current.j].j != stop.j) {
             env->agents[current.i][current.j]++;
             heuristique[current.i][current.j] = dis[target.i][target.j] - dis[current.i][current.j];
@@ -737,14 +589,18 @@ void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, i
             }
             current = pred[current.i][current.j];
         }
-        if (iteration % modulo != 0) env->agents[start.i][start.j]++;
+        if (modulo_count != 0) env->agents[start.i][start.j]++;
         else env->agents[target.i][target.j]++;
 
         // Si c'est la première itération, on échange l'heuristique et le tableau des distances
-        if (iteration % modulo == 0) {
+        if (modulo_count == 0) {
             double** temps = heuristique;
             heuristique = dis;
             dis = temps;
+        }
+        modulo_count++;
+        if (modulo_count == modulo) {
+            modulo_count = 0;
         }
 
         iteration++;
