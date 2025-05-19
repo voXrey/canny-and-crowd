@@ -16,3 +16,7 @@ $(TARGET): $(OBJS)
 
 clean:
 	rm -f $(TARGET) $(OBJS)
+
+safe: CXXFLAGS += -fsanitize=address -g
+safe: LDFLAGS += -fsanitize=address
+safe: clean $(TARGET)

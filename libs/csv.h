@@ -11,6 +11,6 @@ circular_list_t* load_movements(const char* filename, int n);
 void free_movements(circular_list_t* cl);
 
 // Écrire le résultat en performance d'une exécution de parcours dans un fichier CSV
-void write_result(const char filename, int modulo, int clocks, double time);
+void write_result(const char* filename, int modulo, int clocks, double time);
 
 #endif // CSV_H
