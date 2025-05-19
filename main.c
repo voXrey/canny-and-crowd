@@ -32,7 +32,9 @@ int main(int argc, char** argv) {
 
     if (argc == 5) {
         n = atoi(argv[4]);
+        image_t past = image;
         image = image_resize(image, n);
+        image_free(past);
     }
 
     // Application du filtre de Canny
@@ -59,6 +61,7 @@ int main(int argc, char** argv) {
             cpu_time_used = ((double) (end-start)) / CLOCKS_PER_SEC;
             log_info("A* modulo %d : %.3f secondes", i, cpu_time_used);
             free_movements(movements);
+            env_free(env);
             write_result("results_laby3.csv", i, (end-start), cpu_time_used);
         }
     }
@@ -130,11 +133,13 @@ int main(int argc, char** argv) {
     */
     
     env_image_colored_edit(colored_image, env, n);
-    colored_image_show(colored_image);
+    colored_image_show(colored_image);    
 
     env_free(env);
     image_free(canny_image);
     image_free(image_thickened);
+    colored_image_free(colored_image);
+    image_free(image);
 
     return 0;
 }

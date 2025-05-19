@@ -266,6 +266,7 @@ image_t canny(image_t image, double t_max, double t_min) {
     // Flou gaussien
     kernel_t kernel = create_gaussian_kernel(5, 1.0);
     image_t blured_image = image_apply_filter(image, kernel);
+    kernel_free(kernel);
 
     // Appliquer le filtre de Sobel
     image_t gradient_x, gradient_y;
