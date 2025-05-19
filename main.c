@@ -44,9 +44,29 @@ int main(int argc, char** argv) {
 
 
     // Test sur les environnements
-    environment_t env = env_from_image(image_thickened);
+    environment_t env;
+    circular_list_t* movements;
 
-    circular_list_t* movements = load_movements(movements_file_path, n);
+    int tests = 3;
+
+    for (int i = 1; i < 10; i += 1) {
+        for (int j = 0; j < tests; j++) {
+            env = env_from_image(image_thickened);
+            movements = load_movements(movements_file_path, n);
+            start = clock();
+            multiple_move_env_iterative_a_star_modulo(movements, &env, weight, i);
+            end = clock();
+            cpu_time_used = ((double) (end-start)) / CLOCKS_PER_SEC;
+            log_info("A* modulo %d : %f secondes", i, cpu_time_used);
+            free_movements(movements);
+            printf("%d,%f\n", i, cpu_time_used);
+        }
+    }
+
+
+    /*
+    env = env_from_image(image_thickened);
+    movements = load_movements(movements_file_path, n);
     start = clock();
     multiple_move_env_iterative_a_star(movements, &env, weight);
     end = clock();
@@ -107,7 +127,7 @@ int main(int argc, char** argv) {
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
     log_info("A* norme 1 : %f secondes", cpu_time_used);
     free_movements(movements);
-    
+    */
     
     env_image_colored_edit(colored_image, env, n);
     colored_image_show(colored_image);
