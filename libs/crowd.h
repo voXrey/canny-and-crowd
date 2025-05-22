@@ -21,34 +21,22 @@ environment_t env_from_image(image_t image);
 // Libérer la mémoire occupée par un environnement
 void env_free(environment_t env);
 
-// Faire parcourir un environnement par un agent
-void env_move_agent(environment_t* env, position_t start, position_t target, int weight);
-
-// Faire parcourir un environnement par plusieurs agents
-void env_move(environment_t* env, circular_list_t movements, int weight);
-
 // Modifier une image en fonction de l'environnement
 void env_image_edit(image_t image, environment_t env, int n);
 
 // Modifier une image colorée en fonction de l'environnement
 void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 
-// Parcourir un environnement avec un A* simple (norme 1)
-void move_env_a_star(movement_t movement, environment_t* env, int weight);
+// Parcourir un environnement avec un A* itératif
+void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight, int);
 
-// Appliquer plusieurs mouvements à un environnement avec A* simple (norme 1)
-void multiple_move_env_a_star(circular_list_t* movements, environment_t* env, int weight);
+// Appliquer plusieurs mouvements à un environnement avec A* itératif
+void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight, int modulo);
 
-// Parcourir un environnement avec un A* simple (Dijkstra pour heuristique)
-void move_env_iterative_a_star_dijkstra(movement_t movement, environment_t* env, int weight);
+// Initialiser les tableaux nécessaires pour les déplacements dans un environnement
+void env_initialiser_tableaux(environment_t* env);
 
-// Appliquer plusieurs mouvements à un environnement avec A* simple (Dijkstra pour heuristique)
-void multiple_move_env_iterative_a_star_dijkstra(circular_list_t* movements, environment_t* env, int weight);
-
-// Parcourir un environnement avec un A* itératif "modulo" (on met totalement à jour l'heuristique de temps en temps)
-void move_env_iterative_a_star_modulo(movement_t movement, environment_t* env, int weight, int modulo);
-
-// Appliquer plusieurs mouvements à un environnement avec A* itératif modulo
-void multiple_move_env_iterative_a_star_modulo(circular_list_t* movements, environment_t* env, int weight, int modulo);
+// Libérer les ressources allouées pour les tableaux
+void env_liberer_tableaux(environment_t* env);
 
 #endif

@@ -49,93 +49,18 @@ int main(int argc, char** argv) {
     environment_t env;
     circular_list_t* movements;
 
-    int tests = 10;
-
-    for (int i = 1; i < 2001; i += 1) {
-        for (int j = 0; j < tests; j++) {
-            env = env_from_image(image_thickened);
-            movements = load_movements(movements_file_path, n);
-            start = clock();
-            multiple_move_env_iterative_a_star_modulo(movements, &env, weight, i);
-            end = clock();
-            cpu_time_used = ((double) (end-start)) / CLOCKS_PER_SEC;
-            log_info("A* modulo %d : %.3f secondes", i, cpu_time_used);
-            free_movements(movements);
-            env_free(env);
-            write_result("results_laby3.csv", i, (end-start), cpu_time_used);
-        }
-    }
-
-
-    /*
     env = env_from_image(image_thickened);
+    env_initialiser_tableaux(&env);
     movements = load_movements(movements_file_path, n);
     start = clock();
-    multiple_move_env_iterative_a_star(movements, &env, weight);
+    multiple_move_env_iterative_a_star(movements, &env, weight, 56);
     end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* itératif : %f secondes", cpu_time_used);
+    cpu_time_used = ((double) (end-start)) / CLOCKS_PER_SEC;
+    log_info("A* 100 10 modulo %d : %.3f secondes", 56, cpu_time_used);
     free_movements(movements);
-
-    env = env_from_image(image_thickened);
-    movements = load_movements(movements_file_path, n);
-    start = clock();
-    multiple_move_env_iterative_a_star_dijkstra(movements, &env, weight);
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* Dijkstra : %f secondes", cpu_time_used);
-    free_movements(movements);
-
-    env = env_from_image(image_thickened);
-    movements = load_movements(movements_file_path, n);
-    start = clock();
-    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 20);
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* modulo 20 : %f secondes", cpu_time_used);
-    free_movements(movements);
-
-    env = env_from_image(image_thickened);
-    movements = load_movements(movements_file_path, n);
-    start = clock();
-    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 50);
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* modulo 50 : %f secondes", cpu_time_used);
-    free_movements(movements);
-
-    env = env_from_image(image_thickened);
-    movements = load_movements(movements_file_path, n);
-    start = clock();
-    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 100);
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* modulo 100 : %f secondes", cpu_time_used);
-    free_movements(movements);
-
-    env = env_from_image(image_thickened);
-    movements = load_movements(movements_file_path, n);
-    start = clock();
-    multiple_move_env_iterative_a_star_modulo(movements, &env, weight, 500);
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* modulo 500 : %f secondes", cpu_time_used);
-    free_movements(movements);
-
-    env = env_from_image(image_thickened);
-    movements = load_movements(movements_file_path, n);
-    start = clock();
-    multiple_move_env_a_star(movements, &env, weight);
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    log_info("A* norme 1 : %f secondes", cpu_time_used);
-    free_movements(movements);
-    */
-    
-    env_image_colored_edit(colored_image, env, n);
-    colored_image_show(colored_image);    
-
+    env_liberer_tableaux(&env);
     env_free(env);
+
     image_free(canny_image);
     image_free(image_thickened);
     colored_image_free(colored_image);

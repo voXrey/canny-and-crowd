@@ -34,10 +34,4 @@ void image_hysteresis(image_t image);
 // Application du filtre de Canny
 image_t canny(image_t image, double t_max, double t_min);
 
-// Résout un chemin entre deux positions avec Dijkstra
-queue_t* solve_dijkstra(image_t image, position_t s, position_t t);
-
-// Dessine une solution (chemin) sur une image
-void draw_solution(colored_image_t original_image, queue_t* solution, colored_pixel_t pixel, int n);
-
 #endif // IMAGE_USAGE_H
