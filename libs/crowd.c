@@ -115,23 +115,26 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
 
     // Boucle principale
     position_t* s;
+    position_t* t;
     int iteration = 0;
     while (agents > 0) {
         if (iteration % modulo != 0) {
             dis[start.i][start.j] = 0.;
-            visited[start.i][start.j] = 0;
+            visited[start.i][start.j] = iteration;
             s = ptrs[start.i][start.j];
+            t = ptrs[target.i][target.j];
         }
         else {
             dis[target.i][target.j] = 0.;
-            visited[target.i][target.j] = 0;
+            visited[target.i][target.j] = iteration;
             s = ptrs[target.i][target.j];
+            t = ptrs[start.i][start.j];
         }
         pq_push(pq, 0, (void*) s);
 
         while (!pq_is_empty(pq)) {
             position_t* u = (position_t*) pq_pop(pq);
-            if (iteration % modulo != 0 && u->i == target.i && u->j == target.j) break;
+            if ((iteration % modulo != 0 || agents == 1) && u->i == t->i && u->j == t->j) break;
 
             for (int d = 0; d < 4; d++) {
                 int ni = u->i + directions[d][0];
@@ -162,32 +165,29 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
         while (!pq_is_empty(pq)) {
             s = (position_t*) pq_pop(pq);
         }
-
         // Agir sur l'environnement
-        position_t current = (iteration % modulo != 0) ? target : start;
-        position_t stop = (iteration % modulo != 0) ? start : target;
-        while (pred[current.i][current.j].i != stop.i || pred[current.i][current.j].j != stop.j) {
-            env->agents[current.i][current.j]++;
-            heuristique[current.i][current.j] = dis[target.i][target.j] - dis[current.i][current.j];
-            if (env->agents[current.i][current.j] > env->max) {
-                env->max = env->agents[current.i][current.j];
-            }
-            current = pred[current.i][current.j];
-        }
-        if (iteration % modulo != 0) env->agents[start.i][start.j]++;
-        else env->agents[target.i][target.j]++;
 
-        // Si c'est la première itération, on échange l'heuristique et le tableau des distances
         if (iteration % modulo == 0) {
             double** temps = heuristique;
             heuristique = dis;
             dis = temps;
         }
-
+        else {
+            position_t current = target;
+            while ((current.i != start.i || current.j != start.j) && visited[current.i][current.j] == iteration) {
+                env->agents[current.i][current.j]++;
+                heuristique[current.i][current.j] = dis[target.i][target.j] - dis[current.i][current.j];
+                if (env->agents[current.i][current.j] > env->max) {
+                    env->max = env->agents[current.i][current.j];
+                }
+                current = pred[current.i][current.j];
+            }
+        }
+        
         iteration++;
         agents--;
     }
-
+    log_debug("Tous les agents ont été déplacés");
     // Libérer les ressources
     pq_free(pq);
 
