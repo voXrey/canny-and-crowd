@@ -90,11 +90,33 @@ void image_apply_sobel(image_t image, image_t* gradient_x, image_t* gradient_y) 
     *gradient_x = image_apply_filter(copy1, kernel_x);
     *gradient_y = image_apply_filter(copy2, kernel_y);
 
+    // Variables pour la normalisation
+    double g_max = 0.;
+    double g_min = 1.;
+
+    // Première étape de calcul
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
             image.pixels[i][j] = sqrt(pow(gradient_x->pixels[i][j], 2) + pow(gradient_y->pixels[i][j], 2));
         }
     }
+
+    // Normalisation
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            if (image.pixels[i][j] < g_min) g_min = image.pixels[i][j];
+            if (image.pixels[i][j] > g_max) g_max = image.pixels[i][j];
+        }
+    }
+    if (g_max != g_min) {
+        for (int i = 0; i < image.rows; i++) {
+            for (int j = 0; j < image.cols; j++) {
+                image.pixels[i][j] = (image.pixels[i][j] - g_min)/(g_max - g_min);
+            }
+        }
+    }
+
+
     image_free(copy1);
     image_free(copy2);
     kernel_free(kernel_x);
