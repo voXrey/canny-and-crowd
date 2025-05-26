@@ -38,28 +38,34 @@ int main(int argc, char** argv) {
     }
 
     // Application du filtre de Canny
-    image_t canny_image = canny(image, 0.2, 0.4);
+    image_t canny_image = canny(image, 0.1, 0.2);
     
     // Epaississement de l'image
-    image_t image_thickened = image_thicken(canny_image, 1, 1.);
+    image_t image_thickened = image_thicken(canny_image, 5, 1.);
     image_write(image_thickened, "pictures/image_traitee.jpg");
-
+    log_info("Image traitee ecrite dans pictures/image_traitee.jpg");
 
     // Test sur les environnements
     environment_t env;
     circular_list_t* movements;
-
+    
     env = env_from_image(image_thickened);
     env_initialiser_tableaux(&env);
     movements = load_movements(movements_file_path, n);
     start = clock();
-    multiple_move_env_iterative_a_star(movements, &env, weight, 56);
+    multiple_move_env_iterative_a_star(movements, &env, weight, 100);
     end = clock();
     cpu_time_used = ((double) (end-start)) / CLOCKS_PER_SEC;
-    log_info("A* 100 10 modulo %d : %.3f secondes", 56, cpu_time_used);
+    log_info("A* modulo %d : %.3f secondes", 100, cpu_time_used);
+
+    env_image_colored_edit(colored_image, env, n);
+    colored_image_write(colored_image, "pictures/image_resultat.jpg");
+    log_info("Image resultante ecrite dans pictures/image_resultat.jpg");
+
     free_movements(movements);
     env_liberer_tableaux(&env);
     env_free(env);
+    
 
     image_free(canny_image);
     image_free(image_thickened);
