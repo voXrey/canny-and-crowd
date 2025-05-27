@@ -96,6 +96,11 @@ void env_image_colored_edit(colored_image_t image, environment_t env, int n) {
     log_debug("Image colorée modifiée en fonction de l'environnement : %s", image.name);
 }
 
+// Distance norme 1
+int distance_norme1(position_t p1, position_t p2) {
+    return abs(p1.i - p2.i) + abs(p1.j - p2.j);
+}
+
 // Parcourir un environnement avec un A* itératif
 void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight, int modulo) {
     log_debug("Déplacement de %d agents dans un environnement avec A* itératif", movement.agents);
@@ -176,7 +181,7 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
             position_t current = target;
             while ((current.i != start.i || current.j != start.j) && visited[current.i][current.j] == iteration) {
                 env->agents[current.i][current.j]++;
-                heuristique[current.i][current.j] = -dis[current.i][current.j];
+                heuristique[current.i][current.j] = dis[target.i][target.j]-dis[current.i][current.j];
                 if (env->agents[current.i][current.j] > env->max) {
                     env->max = env->agents[current.i][current.j];
                 }
