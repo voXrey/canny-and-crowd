@@ -176,7 +176,7 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
             position_t current = target;
             while ((current.i != start.i || current.j != start.j) && visited[current.i][current.j] == iteration) {
                 env->agents[current.i][current.j]++;
-                heuristique[current.i][current.j] = dis[target.i][target.j] - dis[current.i][current.j];
+                heuristique[current.i][current.j] = -dis[current.i][current.j];
                 if (env->agents[current.i][current.j] > env->max) {
                     env->max = env->agents[current.i][current.j];
                 }
