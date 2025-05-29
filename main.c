@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     environment_t env;
     circular_list_t* movements;
     
-    env = env_from_image(image_thickened);
+    env = env_from_image(image_morpho);
     env_initialiser_tableaux(&env);
     movements = load_movements(movements_file_path, n);
     start = clock();
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     
 
     image_free(canny_image);
-    image_free(image_thickened);
+    image_free(image_morpho);
     colored_image_free(colored_image);
     image_free(image);
 

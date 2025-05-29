@@ -64,6 +64,5 @@ void image_show(image_t image);
 // Fonctions de manipulation d'images
 image_t image_resize(image_t image, int scale);
 image_t image_apply_filter(image_t image, kernel_t kernel);
-image_t image_thicken(image_t image, int n, pixel_t intensity);
 
 #endif // IMAGE_H

@@ -301,26 +301,3 @@ image_t image_apply_filter(image_t image, kernel_t kernel) {
     log_debug("Filtre appliqué à l'image : %s", image.name);
     return result;
 }
-
-// Epaissir certains pixels
-image_t image_thicken(image_t image, int n, pixel_t intensity) {
-    log_debug("Épaississement de l'image : %s, facteur de %d pour les pixels d'intensité %.3f",
-                image.name, n, intensity);
-    image_t copy = image_copy(image);
-
-    for (int i = 0; i < image.rows; i++) {
-        for (int j = 0; j < image.cols; j++) {
-            if (image.pixels[i][j] == intensity) {
-                for (int x = -n; x <= n; x++) {
-                    for (int y = -n; y <= n; y++) {
-                        if (i + x >= 0 && i + x < image.rows && j + y >= 0 && j + y < image.cols) {
-                            copy.pixels[i + x][j + y] = intensity;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    log_debug("Épaississement terminé : %s", image.name);
-    return copy;
-}
