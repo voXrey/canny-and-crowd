@@ -318,7 +318,7 @@ image_t canny(image_t image, double t_max, double t_min) {
 // Rendre continue les contours de l'image
 image_t fermeture_morphologique(image_t image, int size) {
     log_debug("Application de la fermeture morphologique sur l'image : %s", image.name);
-    image_t result = image_copy(image);
+    image_t result_dilatation = image_copy(image);
 
     // Dilatation
     int mean = size / 2;
@@ -337,12 +337,16 @@ image_t fermeture_morphologique(image_t image, int size) {
                 }
             }
             if (to_dilate) {
-                result.pixels[i][j] = 1.0; // Dilater le pixel
+                result_dilatation.pixels[i][j] = 1.0; // Dilater le pixel
+            }
+            else {
+                result_dilatation.pixels[i][j] = image.pixels[i][j]; // Garder le pixel
             }
         }
     }
 
     // Erosion
+    image_t result_erosion = image_copy(result_dilatation);
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
             bool to_erode = false;
@@ -351,18 +355,22 @@ image_t fermeture_morphologique(image_t image, int size) {
                     int ni = i + x;
                     int nj = j + y;
                     if (!(ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols)) continue;
-                    if (image.pixels[ni][nj] < 1.0) {
+                    if (result_dilatation.pixels[ni][nj] < 1.0) {
                         to_erode = true;
                         break;
                     }
                 }
             }
             if (to_erode) {
-                result.pixels[i][j] = 0.; // Eroder le pixel
+                result_erosion.pixels[i][j] = 0.0; // Eroder le pixel
+            }
+            else {
+                result_erosion.pixels[i][j] = result_dilatation.pixels[i][j]; // Garder le pixel
             }
         }
     }
+    image_free(result_dilatation);
 
     log_debug("Fermeture morphologique appliquée sur l'image : %s", image.name);
-    return result;
+    return result_erosion;
 }

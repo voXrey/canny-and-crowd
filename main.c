@@ -43,10 +43,8 @@ int main(int argc, char** argv) {
     image_t canny_image = canny(image, 0.1, 0.2);
     
     // Epaississement de l'image
-    image_t image_thickened = image_thicken(canny_image, 5, 1.);
-    image_write(image_thickened, "pictures/image_traitee.jpg");
-    log_info("Image traitee ecrite dans pictures/image_traitee.jpg");
-
+    image_t image_morpho = fermeture_morphologique(canny_image, 20);
+    
     // Test sur les environnements
     environment_t env;
     circular_list_t* movements;
