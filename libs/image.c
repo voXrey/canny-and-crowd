@@ -304,7 +304,8 @@ image_t image_apply_filter(image_t image, kernel_t kernel) {
 
 // Epaissir certains pixels
 image_t image_thicken(image_t image, int n, pixel_t intensity) {
-    log_debug("Épaississement de l'image : %s avec un facteur de %d pour les pixels d'intensité %.3f", image.name, n, intensity);
+    log_debug("Épaississement de l'image : %s, facteur de %d pour les pixels d'intensité %.3f",
+                image.name, n, intensity);
     image_t copy = image_copy(image);
 
     for (int i = 0; i < image.rows; i++) {

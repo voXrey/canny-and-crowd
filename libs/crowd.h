@@ -31,7 +31,8 @@ void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight, int);
 
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
-void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight, int modulo);
+void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env,
+                                        int weight, int modulo);
 
 // Initialiser les tableaux nécessaires pour les déplacements dans un environnement
 void env_initialiser_tableaux(environment_t* env);

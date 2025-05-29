@@ -22,7 +22,9 @@ int main(int argc, char** argv) {
     clock_t start, end;
     double cpu_time_used;
 
-    if (argc < 4 || 5 < argc) log_fatal("Usage : %s <image> <movements-file> <weight> [compression]", argv[0]);
+    if (argc < 4 || 5 < argc) {
+        log_fatal("Usage : %s <image> <movements-file> <weight> [compression]", argv[0]);
+    }
     const char* movements_file_path = argv[2];
     int weight = atoi(argv[3]);
     int n = 1;

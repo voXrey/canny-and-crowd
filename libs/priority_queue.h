@@ -16,10 +16,10 @@ typedef struct priority_queue_s {
 } priority_queue_t;
 
 // Fonctions pour manipuler la file de priorité
-priority_queue_t* pq_create(int capacity);               // Créer une file de priorité
-void pq_free(priority_queue_t* pq);                      // Libérer une file de priorité
+priority_queue_t* pq_create(int capacity); // Créer une file de priorité
+void pq_free(priority_queue_t* pq); // Libérer une file de priorité
 void pq_push(priority_queue_t* pq, double priority, void* value); // Ajouter un élément
-void* pq_pop(priority_queue_t* pq);                      // Extraire l'élément avec la plus petite priorité
-bool pq_is_empty(priority_queue_t* pq);                  // Vérifier si la file est vide
+void* pq_pop(priority_queue_t* pq); // Extraire l'élément avec la plus petite priorité
+bool pq_is_empty(priority_queue_t* pq); // Vérifier si la file est vide
 
 #endif // PRIORITY_QUEUE_H

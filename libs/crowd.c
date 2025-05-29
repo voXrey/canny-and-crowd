@@ -179,7 +179,8 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
         }
         else {
             position_t current = target;
-            while ((current.i != start.i || current.j != start.j) && visited[current.i][current.j] == iteration) {
+            while ((current.i != start.i || current.j != start.j)
+                    && visited[current.i][current.j] == iteration) {
                 env->agents[current.i][current.j]++;
                 heuristique[current.i][current.j] = dis[target.i][target.j]-dis[current.i][current.j];
                 if (env->agents[current.i][current.j] > env->max) {
@@ -200,8 +201,9 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
 }
 
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
-void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env, int weight, int modulo) {
-    log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif");
+void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env,
+                                        int weight, int modulo) {
+    log_debug("Déplacement d'agents dans un environnement avec A* itératif");
     int n = movements->size;
     while (!cl_is_empty(movements)) {
         movement_t* m = (movement_t*) cl_get(movements);
@@ -209,7 +211,7 @@ void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_
         free(m);
         cl_remove(movements);
     }
-    log_debug("Déplacement d'agents dans un environnement avec plusieurs mouvements avec A* itératif terminé");
+    log_debug("Déplacement d'agents dans un environnement avec A* itératif terminé");
 }
 
 // Initialiser les tableaux nécessaires pour les déplacements dans un environnement
