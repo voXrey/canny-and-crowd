@@ -24,7 +24,8 @@ kernel_t create_gaussian_kernel(int size, double sigma) {
     for (int x = 0; x < size; x++) {
         kernel.data[x] = (double*) malloc(sizeof(double) * size);
         for (int y = 0; y < size; y++) {
-            kernel.data[x][y] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
+            kernel.data[x][y] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0)))
+                                / (2 * M_PI * sigma * sigma);
             sum += kernel.data[x][y];
         }
     }
@@ -312,4 +313,56 @@ image_t canny(image_t image, double t_max, double t_min) {
     log_debug("Filtre de Canny appliqué sur l'image : %s", image.name);
 
     return non_maxima;
+}
+
+// Rendre continue les contours de l'image
+image_t fermeture_morphologique(image_t image, int size) {
+    log_debug("Application de la fermeture morphologique sur l'image : %s", image.name);
+    image_t result = image_copy(image);
+
+    // Dilatation
+    int mean = size / 2;
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            bool to_dilate = false;
+            for (int x = -mean; x < mean && !to_dilate; x++) {
+                for (int y = -mean; y < mean; y++) {
+                    int ni = i + x;
+                    int nj = j + y;
+                    if (!(ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols)) continue;
+                    if (image.pixels[ni][nj] > 0) {
+                        to_dilate = true;
+                        break;
+                    }
+                }
+            }
+            if (to_dilate) {
+                result.pixels[i][j] = 1.0; // Dilater le pixel
+            }
+        }
+    }
+
+    // Erosion
+    for (int i = 0; i < image.rows; i++) {
+        for (int j = 0; j < image.cols; j++) {
+            bool to_erode = false;
+            for (int x = -mean; x < mean && !to_erode; x++) {
+                for (int y = -mean; y < mean; y++) {
+                    int ni = i + x;
+                    int nj = j + y;
+                    if (!(ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols)) continue;
+                    if (image.pixels[ni][nj] < 1.0) {
+                        to_erode = true;
+                        break;
+                    }
+                }
+            }
+            if (to_erode) {
+                result.pixels[i][j] = 0.; // Eroder le pixel
+            }
+        }
+    }
+
+    log_debug("Fermeture morphologique appliquée sur l'image : %s", image.name);
+    return result;
 }
