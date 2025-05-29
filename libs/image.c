@@ -276,7 +276,7 @@ image_t image_resize(image_t image, int scale) {
     return scaled;
 }
 
-// Appliquer un filtre à une image
+// Appliquer un filtre à une image (réflexion de l'image aux bords)
 image_t image_apply_filter(image_t image, kernel_t kernel) {
     log_debug("Application d'un filtre à l'image : %s", image.name);
     image_t result = image_copy(image);
@@ -287,11 +287,15 @@ image_t image_apply_filter(image_t image, kernel_t kernel) {
             pixel_t intensity = 0;
             for (int x = 0; x < kernel.size; x++) {
                 for (int y = 0; y < kernel.size; y++) {
-                    int xi = i + x - border;
-                    int yj = j + y - border;
-                    pixel_t pixel = (xi >= 0 && xi < image.rows && yj >= 0 && yj < image.cols)
-                                    ? image.pixels[xi][yj]
-                                    : 0; // Extension par zéro
+                    int ni = i + x - border;
+                    int nj = j + y - border;
+
+                    if (ni < 0) ni = -ni; // Réflexion aux bords
+                    if (nj < 0) nj = -nj; // Réflexion aux bords
+                    if (ni >= image.rows) ni = 2 * image.rows - ni - 1; // Réflexion aux bords
+                    if (nj >= image.cols) nj = 2 * image.cols - nj - 1; // Réflexion aux bords
+
+                    pixel_t pixel = image.pixels[ni][nj];
                     intensity += pixel * kernel.data[x][y];
                 }
             }
