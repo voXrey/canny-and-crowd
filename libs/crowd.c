@@ -102,7 +102,7 @@ int distance_norme1(position_t p1, position_t p2) {
 }
 
 // Parcourir un environnement avec un A* itératif
-void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight, int modulo) {
+void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight0, int alpha, int modulo) {
     log_debug("Déplacement de %d agents dans un environnement avec A* itératif", movement.agents);
     position_t start = movement.start;
     position_t target = movement.target;
@@ -149,7 +149,7 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
                         && visited[ni][nj] < iteration && env->agents[ni][nj] != -1) {
                     
                     double dis_n = (visited[ni][nj] == iteration) ? dis[ni][nj] : INFINITY;
-                    double new_dist = dis[u->i][u->j] + (env->agents[ni][nj] + weight);
+                    double new_dist = dis[u->i][u->j] + (env->agents[ni][nj]*alpha + weight0);
 
                     if (new_dist < dis_n) {
                         dis[ni][nj] = new_dist;
@@ -202,12 +202,12 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
 
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
 void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env,
-                                        int weight, int modulo) {
+                                        int weight0, int alpha, int modulo) {
     log_debug("Déplacement d'agents dans un environnement avec A* itératif");
     int n = movements->size;
     while (!cl_is_empty(movements)) {
         movement_t* m = (movement_t*) cl_get(movements);
-        move_env_iterative_a_star(*m, env, weight, modulo);
+        move_env_iterative_a_star(*m, env, weight0, alpha, modulo);
         free(m);
         cl_remove(movements);
     }

@@ -316,7 +316,7 @@ image_t canny(image_t image, double t_max, double t_min) {
 }
 
 // Rendre continue les contours de l'image
-image_t fermeture_morphologique(image_t image, int size) {
+image_t image_fermeture_morphologique(image_t image, int size) {
     log_debug("Application de la fermeture morphologique sur l'image : %s", image.name);
     image_t result_dilatation = image_copy(image);
 
@@ -325,8 +325,8 @@ image_t fermeture_morphologique(image_t image, int size) {
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
             bool to_dilate = false;
-            for (int x = -mean; x < mean && !to_dilate; x++) {
-                for (int y = -mean; y < mean; y++) {
+            for (int x = -mean; x <= mean && !to_dilate; x++) {
+                for (int y = -mean; y <= mean; y++) {
                     int ni = i + x;
                     int nj = j + y;
                     if (!(ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols)) continue;
@@ -350,8 +350,8 @@ image_t fermeture_morphologique(image_t image, int size) {
     for (int i = 0; i < image.rows; i++) {
         for (int j = 0; j < image.cols; j++) {
             bool to_erode = false;
-            for (int x = -mean; x < mean && !to_erode; x++) {
-                for (int y = -mean; y < mean; y++) {
+            for (int x = -mean; x <= mean && !to_erode; x++) {
+                for (int y = -mean; y <= mean; y++) {
                     int ni = i + x;
                     int nj = j + y;
                     if (!(ni >= 0 && ni < image.rows && nj >= 0 && nj < image.cols)) continue;

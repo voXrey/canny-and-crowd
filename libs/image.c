@@ -259,7 +259,7 @@ image_t image_resize(image_t image, int scale) {
         scaled.pixels[i] = (pixel_t*) malloc(sizeof(pixel_t) * new_cols);
         for (int j = 0; j < new_cols; j++) {
             // Moyenne des pixels voisins
-            pixel_t pixel_moyen = 0;
+            pixel_t pixel_moyen = 0.;
             int count = 0;
             for (int x = 0; x < scale && i * scale + x < image.rows; x++) {
                 for (int y = 0; y < scale && j * scale + y < image.cols; y++) {

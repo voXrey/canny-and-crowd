@@ -28,11 +28,11 @@ void env_image_edit(image_t image, environment_t env, int n);
 void env_image_colored_edit(colored_image_t image, environment_t env, int n);
 
 // Parcourir un environnement avec un A* itératif
-void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight, int);
+void move_env_iterative_a_star(movement_t movement, environment_t* env, int weight0, int alpha, int n);
 
 // Appliquer plusieurs mouvements à un environnement avec A* itératif
 void multiple_move_env_iterative_a_star(circular_list_t* movements, environment_t* env,
-                                        int weight, int modulo);
+                                        int weight0, int alpha, int modulo);
 
 // Initialiser les tableaux nécessaires pour les déplacements dans un environnement
 void env_initialiser_tableaux(environment_t* env);

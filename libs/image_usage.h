@@ -35,6 +35,6 @@ void image_hysteresis(image_t image);
 image_t canny(image_t image, double t_max, double t_min);
 
 // Rendre continue les contours de l'image
-image_t fermeture_morphologique(image_t image, int size);
+image_t image_fermeture_morphologique(image_t image, int size);
 
 #endif // IMAGE_USAGE_H
