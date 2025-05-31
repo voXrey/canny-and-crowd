@@ -188,7 +188,10 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
                 }
                 current = pred[current.i][current.j];
             }
-            env->agents[current.i][current.j]++;
+            env->agents[start.i][start.j]++;
+            if (env->agents[start.i][start.j] > env->max) {
+                env->max = env->agents[start.i][start.j];
+            }
         }
         
         iteration++;
