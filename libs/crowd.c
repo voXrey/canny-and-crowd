@@ -188,6 +188,7 @@ void move_env_iterative_a_star(movement_t movement, environment_t* env, int weig
                 }
                 current = pred[current.i][current.j];
             }
+            env->agents[current.i][current.j]++;
         }
         
         iteration++;
