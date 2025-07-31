@@ -1,5 +1,7 @@
 # TIPE
 
+Projet réalisé dans le cadre du TIPE 2025 pour mes concours d'entrée en école d'ingénieur. Le thème était Transition, transformation, conversion.
+
 ## Utilisation du programme
 
 ### Dépendances
